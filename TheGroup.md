@@ -15,7 +15,7 @@ I am Khush Prajapati, and I am a Computer Science graduate student with a strong
 - Code must be fully implemented, peer-reviewed, merged into the main branch, and build successfully.
 - All backend APIs (Java) and frontend components (React) must integrate without errors.
 - Features must pass functional validation against acceptance criteria through unit testing or manual testing.
-# Plan:
+## Plan:
 - Use GitHub Actions to run automated builds and tests on every pull request.
 - Enforce GitHub rules requiring at least two team member approvals before merging.
 
@@ -24,7 +24,7 @@ I am Khush Prajapati, and I am a Computer Science graduate student with a strong
 - User interface must follow approved design guidelines and remain consistent across screens.
 - Core actions such as login, adding expenses, viewing balances, and settlements must be intuitive.
 - Dashboards and expense updates must load within 2 seconds under normal usage.
-# Plan:
+## Plan:
 - Test UI on different screen sizes and browsers.
 - Conduct peer usability reviews during sprint reviews.
 
@@ -33,7 +33,7 @@ I am Khush Prajapati, and I am a Computer Science graduate student with a strong
 - User credentials must be securely handled and never stored in plain text.
 - Only authenticated users can access group and expense data.
 - Deleted expenses or groups must be permanently removed from the database.
-# Plan:
+## Plan:
 - Use backend validation and role-based access checks.
 - Team members will test delete operations and verify data is fully removed.
 
@@ -42,7 +42,7 @@ I am Khush Prajapati, and I am a Computer Science graduate student with a strong
 - Expense calculations (equal split, balances) must be accurate for all users.
 - Balance dashboard must correctly reflect real-time updates after add/edit/delete actions.
 - Settlement recommendations must clearly show “A pays B $X” logic.
-# Plan:
+## Plan:
 - Validate calculations using sample expense scenarios.
 - Cross-check results among team members for correctness.
 
@@ -51,7 +51,7 @@ I am Khush Prajapati, and I am a Computer Science graduate student with a strong
 - README file must be updated with setup instructions, features, and technologies used.
 - Each feature must be linked to a GitHub issue or story.
 - Commit messages must be descriptive and reference the related backlog item.
-# Plan:
+## Plan:
 - Review documentation and commit messages during weekly team meetings.
 - Remind members to maintain clarity and traceability.
 
@@ -60,6 +60,6 @@ I am Khush Prajapati, and I am a Computer Science graduate student with a strong
 - Feature must be deployment-ready with no critical bugs remaining.
 - Sprint Review must demonstrate working functionality.
 - Sprint Retrospective must confirm the feature meets the Definition of Done or identify gaps.
-# Plan:
+## Plan:
 - Use CI/CD pipelines to ensure deployment readiness.
 - Validate completion during sprint reviews and retrospectives.
