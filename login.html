@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FairShare - Login</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@100;200;300;400;500;600;700;800;900&family=Geist:wght@100;200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@100;200;300;400;500;600;700&family=IBM+Plex+Sans:wght@100;200;300;400;500;600;700&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Nunito:wght@200;300;400;500;600;700;800;900&family=PT+Serif:wght@400;700&family=Roboto+Slab:wght@100;200;300;400;500;600;700;800;900&family=Roboto:wght@100;300;400;500;700;900&family=Shantell+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  
+  <script src="https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js"></script>
+  
+  <style>
+    :root {
+      /* Applying your original font choice */
+      --font-family-body: 'Inter', sans-serif; 
+      --background: #f8f9fa;
+      --foreground: #1e293b;
+      --card: #ffffff;
+      --card-border: #e2e8f0;
+      --primary: #10b981; /* FairShare Green */
+      --primary-hover: #059669;
+      --primary-foreground: #ffffff;
+      --secondary-foreground: #475569;
+      --muted-foreground: #94a3b8;
+      --border: #e2e8f0;
+      --radius-xl: 16px;
+      --radius-lg: 12px;
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      /* Using your specific font variable */
+      font-family: var(--font-family-body);
+      background-color: var(--background);
+      color: var(--foreground);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow-md);
+      padding: 40px;
+    }
+
+    .logo-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    .logo-mark {
+      width: 48px;
+      height: 48px;
+      background-color: var(--primary);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .app-name { font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
+    .app-subtitle { font-size: 15px; color: var(--secondary-foreground); margin-top: 8px; }
+
+    .form-group { margin-bottom: 20px; }
+    .label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+    .input-field {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-family: var(--font-family-body);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-field:focus { border-color: var(--primary); }
+
+    .visibility-toggle {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted-foreground);
+      display: flex;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: var(--radius-lg);
+      font-size: 15px;
+      font-weight: 600;
+      font-family: var(--font-family-body);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: none;
+      transition: 0.2s;
+    }
+
+    .btn-primary { background-color: var(--primary); color: white; margin-top: 8px; }
+    .btn-primary:hover { background-color: var(--primary-hover); }
+
+    .btn-outline { background-color: white; border: 1px solid var(--border); margin-top: 12px; }
+    .btn-outline:hover { background-color: #f8fafc; }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 24px 0;
+      color: var(--muted-foreground);
+      font-size: 13px;
+    }
+    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background-color: var(--border); }
+    .divider span { padding: 0 10px; }
+
+    .footer-link { text-align: center; margin-top: 24px; font-size: 14px; }
+    .footer-link a { color: var(--primary); text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <div class="logo-header">
+      <div class="logo-mark">
+        <iconify-icon icon="lucide:split" style="font-size: 28px; color: white"></iconify-icon>
+      </div>
+      <h1 class="app-name">FairShare</h1>
+      <p class="app-subtitle">Split expenses easily with friends</p>
+    </div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input type="email" id="email" class="input-field" placeholder="name@example.com" required>
+      </div>
+
+      <div class="form-group">
+        <label class="label">Password</label>
+        <div class="input-wrapper">
+          <input type="password" id="password" class="input-field" placeholder="••••••••" required>
+          <button type="button" class="visibility-toggle" id="togglePassword">
+            <iconify-icon id="eyeIcon" icon="lucide:eye" style="font-size: 20px"></iconify-icon>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="loginBtn">Log In</button>
+    </form>
+
+    <div class="divider"><span>or</span></div>
+
+    <button class="btn btn-outline" type="button" onclick="alert('Redirecting to Google...')">
+      <iconify-icon icon="lucide:chrome" style="font-size: 20px"></iconify-icon>
+      Continue with Google
+    </button>
+
+    <div class="footer-link">
+      Don’t have an account? <a href="#">Sign up</a>
+    </div>
+  </div>
+
+  <script>
+    // Password visibility toggle
+    const toggleBtn = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
+
+    toggleBtn.addEventListener('click', () => {
+      const isPassword = passwordInput.type === 'password';
+      passwordInput.type = isPassword ? 'text' : 'password';
+      eyeIcon.setAttribute('icon', isPassword ? 'lucide:eye-off' : 'lucide:eye');
+    });
+
+    // Form submission simulation
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      loginBtn.disabled = true;
+      loginBtn.innerText = "Processing...";
+      
+      setTimeout(() => {
+        alert("Success! Welcome to FairShare.");
+        loginBtn.disabled = false;
+        loginBtn.innerText = "Log In";
+      }, 1000);
+    });
+  </script>
+</body>
+</html>
