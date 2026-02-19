@@ -1,0 +1,37 @@
+CREATE TABLE IF NOT EXISTS users (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100),
+  email VARCHAR(100) UNIQUE,
+  password VARCHAR(255)
+);
+
+CREATE TABLE IF NOT EXISTS groups (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100),
+  invite_code VARCHAR(10) UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS group_members (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT,
+  group_id BIGINT,
+  role VARCHAR(20),
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (group_id) REFERENCES groups(id)
+);
+
+CREATE TABLE IF NOT EXISTS expenses (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  description VARCHAR(255),
+  amount DECIMAL(10,2),
+  paid_by BIGINT,
+  group_id BIGINT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS expense_splits (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  expense_id BIGINT,
+  user_id BIGINT,
+  amount DECIMAL(10,2)
+);

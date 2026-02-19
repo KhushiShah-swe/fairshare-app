@@ -1,0 +1,470 @@
+/* --- Dashboard Layout --- */
+.dashboard-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.dashboard-header {
+  margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-header p {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* --- 2. Summary / Overview (Stats Grid) --- */
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.stat-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid #f1f5f9;
+  transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+}
+
+.stat-card label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.stat-card h3 {
+  font-size: 2rem;
+  margin: 0;
+}
+
+/* --- Main Content Grid (Groups vs Activity) --- */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 2rem;
+}
+
+/* Mobile Responsive adjustment */
+@media (max-width: 900px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  padding: 1.5rem;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+/* --- 3. Groups Section --- */
+.group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.group-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem;
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.group-item:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.group-info strong {
+  display: block;
+  font-size: 1rem;
+  color: var(--text-main);
+}
+
+.group-info p {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.btn-view {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  background: #f1f5f9;
+  color: var(--text-main);
+  box-shadow: none;
+}
+
+.btn-view:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+/* --- 4. Recent Activity (Updated) --- */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* New: Pushes actions to the right */
+  gap: 12px;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  background: #eef2ff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.details {
+  flex: 1; /* New: Takes available space */
+}
+
+.details p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.details .activity-amount {
+  font-weight: 700;
+  color: var(--text-main);
+  margin-top: 4px;
+  font-size: 1rem;
+}
+
+.details small {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  text-transform: capitalize;
+}
+
+/* --- NEW: Activity Action Buttons --- */
+.activity-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 10px;
+}
+
+.icon-btn {
+  background: white;
+  border: 1px solid #e2e8f0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary-color);
+  background: #f8fafc;
+}
+
+.icon-btn[title="Delete"]:hover {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+/* --- 5. Quick Actions --- */
+.quick-actions-bar {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.primary-btn {
+  background: var(--primary-color);
+}
+
+.secondary-btn {
+  background: white;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  box-shadow: none;
+}
+
+.secondary-btn:hover {
+  background: #f5f3ff;
+}
+
+/* --- Utility Classes --- */
+.text-success { color: var(--success); }
+.text-error { color: var(--error); }
+.action-link {
+  font-size: 0.85rem;
+  color: var(--primary-color);
+  font-weight: 600;
+  background: none;
+  padding: 0;
+  box-shadow: none;
+}
+.action-link:hover {
+  text-decoration: underline;
+  background: none;
+  transform: none;
+}
+.chart-section {
+  margin-bottom: 2rem;
+  padding: 2rem;
+}
+
+.chart-section h3 {
+  margin-bottom: 1.5rem;
+  color: var(--text-main);
+}
+
+/* Ensure chart text is legible */
+.recharts-cartesian-axis-tick-value {
+  font-size: 12px;
+  fill: var(--text-muted);
+}
+
+/* --- Group Page Specifics --- */
+.custom-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  background: white;
+}
+
+.custom-input:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.invite-box {
+  background: rgba(16, 185, 129, 0.05);
+  border: 2px dashed #10b981;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-top: 1rem;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.invite-box h2 {
+  margin: 0.5rem 0;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 800;
+}
+
+.text-muted {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.badge-role {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-role.admin {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.group-icon {
+  font-size: 1.2rem;
+  margin-right: 8px;
+}
+
+.Toastify__toast {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  font-family: inherit;
+}
+/* --- Enhanced Total Spending Card --- */
+.total-spending-card {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  transition: transform 0.3s ease;
+}
+
+.total-spending-card:hover {
+  transform: translateY(-5px);
+}
+
+/* The Animated Shimmer Effect */
+.total-spending-card::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  transform: rotate(30deg);
+  animation: shimmer 8s infinite linear;
+}
+
+@keyframes shimmer {
+  from { transform: rotate(0deg) translateX(-30%); }
+  to { transform: rotate(360deg) translateX(-30%); }
+}
+
+.spending-content {
+  position: relative;
+  z-index: 2;
+}
+
+.spending-content label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  opacity: 0.85;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.amount-wrapper {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.currency-symbol {
+  font-size: 1.8rem;
+  font-weight: 300;
+  color: #c4b5fd; /* Light purple/blue */
+}
+
+.amount-wrapper h1 {
+  font-size: 3.5rem;
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.spending-footer {
+  margin-top: 12px;
+  background: rgba(0, 0, 0, 0.15);
+  padding: 4px 12px;
+  border-radius: 20px;
+  display: inline-block;
+  font-size: 0.8rem;
+  backdrop-filter: blur(4px);
+}
+
+.spending-icon-bg {
+  position: absolute;
+  right: -15px;
+  bottom: -15px;
+  font-size: 9rem;
+  opacity: 0.12;
+  transform: rotate(-10deg);
+  pointer-events: none;
+  filter: grayscale(1) brightness(2);
+}
+.group-stats-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chart-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.chart-panel h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  color: var(--text-main);
+}
+
+@media (max-width: 900px) {
+  .group-stats-row {
+    grid-template-columns: 1fr;
+  }
+}

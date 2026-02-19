@@ -1,0 +1,18 @@
+.custom-select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background-color: white;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+}
+
+.info-box {
+  background: #eff6ff;
+  padding: 10px;
+  border-radius: 8px;
+  color: #1e40af;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
