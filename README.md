@@ -8,7 +8,7 @@
 
 - **Frontend:** React.js  
 - **Backend:** Spring Boot (Java)  
-- **Database:** H2 / MySQL (depending on your setup)  
+- **Database:** MySQL 
 - **Purpose:** Simplify splitting expenses, keeping track of payments, and maintaining a clear balance summary for all group members.  
 
 ---
@@ -52,5 +52,26 @@ Sprint 1 focused on the core functionality for initial release:
 git clone https://github.com/depaulcdm/course-project-fairshare.git
 cd course-project-fairshare
 
+````
 ### 2. Backend
+- Open backend folder in your IDE (e.g., IntelliJ or VS Code)
+- Configure application properties (application.properties) with your DB credentials
+- Build and run the Spring Boot application: ./mvnw spring-boot:run
+- The backend will run at http://localhost:8080
+
+   ---
+### 3. Frontend
+- Open frontend folder in terminal
+- Install dependencies: npm install
+- Start the development server: npm start
+- The frontend will run at http://localhost:5173
+
+   ---
+### Team 
+- Khushi Shah
+- Khush Prajapati
+- Saquibuddin Syed
+
+
+
 
