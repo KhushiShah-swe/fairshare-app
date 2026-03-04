@@ -1,72 +1,141 @@
-import com.fairshare.model.Expense;
-import com.fairshare.repository.ExpenseRepository;
-import com.fairshare.dto.ExpenseDTO;
-import com.fairshare.dto.BalanceDTO;
-import com.fairshare.dto.GroupDetailsDTO;
+package com.fairshare.service;
 
-import java.util.stream.Collectors;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
+import com.fairshare.model.Group;
+import com.fairshare.model.GroupMember;
+import com.fairshare.model.User;
+import com.fairshare.repository.GroupRepository;
+import com.fairshare.repository.GroupMemberRepository;
 
-@Autowired
-private ExpenseRepository expenseRepo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Returns GroupDetailsDTO including members, expenses, and balance summary.
- */
-@Transactional(readOnly = true)
-public GroupDetailsDTO getGroupDetails(Long groupId) {
-    // 1. Fetch group
-    Group group = groupRepo.findById(groupId)
-            .orElseThrow(() -> new RuntimeException("Group not found"));
+import java.util.List;
+import java.util.UUID;
 
-    // 2. Fetch group members
-    List<GroupMember> members = memberRepo.findByGroupId(groupId);
+@Service
+public class GroupService {
 
-    // 3. Fetch group expenses
-    List<Expense> expenses = expenseRepo.findByGroupId(groupId);
+    @Autowired
+    private GroupRepository groupRepo;
 
-    // 4. Map expenses to ExpenseDTO (include addedBy name)
-    List<ExpenseDTO> expenseDTOs = expenses.stream().map(exp -> 
-        new ExpenseDTO(
-            exp.getId(),
-            exp.getDescription(),
-            exp.getCategory(),
-            exp.getAmount(),
-            exp.getPaidByUser().getName(), // <-- member name
-            exp.getExpenseDate(),
-            exp.getNotes()
-        )
-    ).collect(Collectors.toList());
+    @Autowired
+    private GroupMemberRepository memberRepo;
 
-    // 5. Calculate balance per member
-    Map<Long, Double> balanceMap = new HashMap<>();
-    for (GroupMember member : members) {
-        balanceMap.put(member.getUser().getId(), 0.0);
+    // ---------------- READ ----------------
+
+    @Transactional(readOnly = true)
+    public List<GroupMember> getGroupMembers(Long groupId) {
+        return memberRepo.findByGroupId(groupId);
     }
 
-    for (Expense exp : expenses) {
-        double splitAmount = exp.getAmount() / exp.getParticipants().size();
-        for (User participant : exp.getParticipants()) {
-            balanceMap.put(participant.getId(), balanceMap.get(participant.getId()) - splitAmount);
+    @Transactional(readOnly = true)
+    public List<GroupMember> getUserGroups(Long userId) {
+        return memberRepo.findByUserId(userId);
+    }
+
+    // ---------------- CREATE / JOIN ----------------
+
+    @Transactional
+    public Group createGroup(String name, String type, User creator) {
+        Group g = new Group();
+        g.setName(name);
+        g.setType(type);
+        g.setInviteCode(generateInviteCode());
+
+        Group saved = groupRepo.save(g);
+
+        GroupMember gm = new GroupMember();
+        gm.setGroup(saved);
+        gm.setUser(creator);
+        gm.setRole("ADMIN"); // ✅ IMPORTANT for settings/admin buttons
+        memberRepo.save(gm);
+
+        return saved;
+    }
+
+    @Transactional
+    public String joinGroup(String code, User user) {
+        Group group = groupRepo.findByInviteCode(code)
+                .orElseThrow(() -> new RuntimeException("Invalid group code."));
+
+        // Prevent duplicate join
+        GroupMember existing = findMembership(group.getId(), user.getId());
+        if (existing != null) {
+            return "You are already a member of this group.";
         }
-        // The payer gets positive amount
-        Long payerId = exp.getPaidByUser().getId();
-        balanceMap.put(payerId, balanceMap.get(payerId) + exp.getAmount());
+
+        GroupMember gm = new GroupMember();
+        gm.setGroup(group);
+        gm.setUser(user);
+        gm.setRole("MEMBER"); // ✅ joiners are MEMBER
+        memberRepo.save(gm);
+
+        return "Joined group successfully.";
     }
 
-    // Map to BalanceDTO
-    List<BalanceDTO> balances = members.stream()
-            .map(member -> new BalanceDTO(member.getUser().getName(), balanceMap.get(member.getUser().getId())))
-            .collect(Collectors.toList());
+    // ---------------- UPDATE ----------------
 
-    // 6. Return GroupDetailsDTO
-    return new GroupDetailsDTO(
-            group.getId(),
-            group.getName(),
-            group.getType(),
-            balances,
-            expenseDTOs
-    );
+    @Transactional
+    public Group updateGroupName(Long groupId, String newName, Long userId) {
+        GroupMember membership = findMembership(groupId, userId);
+        if (membership == null) {
+            throw new RuntimeException("You are not a member of this group.");
+        }
+
+        // ✅ Only ADMIN can rename
+        if (membership.getRole() == null || !membership.getRole().equalsIgnoreCase("ADMIN")) {
+            throw new RuntimeException("Only ADMIN can rename the group.");
+        }
+
+        Group group = groupRepo.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group not found."));
+
+        group.setName(newName);
+        return groupRepo.save(group);
+    }
+
+    // ---------------- LEAVE / DELETE ----------------
+
+    @Transactional
+    public void leaveGroup(Long groupId, Long userId) {
+        GroupMember membership = findMembership(groupId, userId);
+        if (membership == null) {
+            throw new RuntimeException("You are not a member of this group.");
+        }
+
+        memberRepo.delete(membership);
+    }
+
+    @Transactional
+    public void deleteGroup(Long groupId, Long userId) {
+        GroupMember membership = findMembership(groupId, userId);
+        if (membership == null) {
+            throw new RuntimeException("You are not allowed to delete this group.");
+        }
+
+        // ✅ Only ADMIN can delete
+        if (membership.getRole() == null || !membership.getRole().equalsIgnoreCase("ADMIN")) {
+            throw new RuntimeException("Only ADMIN can delete this group.");
+        }
+
+        // Delete members first (FK constraints)
+        List<GroupMember> members = memberRepo.findByGroupId(groupId);
+        memberRepo.deleteAll(members);
+
+        groupRepo.deleteById(groupId);
+    }
+
+    // ---------------- HELPERS ----------------
+
+    private GroupMember findMembership(Long groupId, Long userId) {
+        return memberRepo.findByGroupId(groupId).stream()
+                .filter(m -> m.getUser() != null && m.getUser().getId().equals(userId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private String generateInviteCode() {
+        return UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+    }
 }

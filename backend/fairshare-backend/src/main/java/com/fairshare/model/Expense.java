@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name="expenses")
 public class Expense {
@@ -37,6 +39,38 @@ public class Expense {
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // =========================
+    // Receipt Upload (NEW)
+    // =========================
+
+    /**
+     * Stores the uploaded receipt file bytes (PDF/Image).
+     * We ignore it in normal JSON responses so your /expenses/group/{groupId}
+     * endpoint won't return huge payloads.
+     */
+    @Lob
+    @JsonIgnore
+    @Column(name = "receipt_data", columnDefinition = "LONGBLOB")
+    private byte[] receiptData;
+
+    /**
+     * Original filename (example: dunkin_receipt.pdf)
+     */
+    @Column(name = "receipt_file_name")
+    private String receiptFileName;
+
+    /**
+     * MIME type (example: application/pdf, image/jpeg)
+     */
+    @Column(name = "receipt_content_type")
+    private String receiptContentType;
+
+    /**
+     * Simple flag for UI to show "View Receipt" button.
+     */
+    @Column(name = "has_receipt")
+    private Boolean hasReceipt = false;
+
     public Expense() {}
 
     // Getters and Setters
@@ -67,4 +101,20 @@ public class Expense {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    // =========================
+    // Receipt Getters/Setters (NEW)
+    // =========================
+
+    public byte[] getReceiptData() { return receiptData; }
+    public void setReceiptData(byte[] receiptData) { this.receiptData = receiptData; }
+
+    public String getReceiptFileName() { return receiptFileName; }
+    public void setReceiptFileName(String receiptFileName) { this.receiptFileName = receiptFileName; }
+
+    public String getReceiptContentType() { return receiptContentType; }
+    public void setReceiptContentType(String receiptContentType) { this.receiptContentType = receiptContentType; }
+
+    public Boolean getHasReceipt() { return hasReceipt; }
+    public void setHasReceipt(Boolean hasReceipt) { this.hasReceipt = hasReceipt; }
 }

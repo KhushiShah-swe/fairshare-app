@@ -25,8 +25,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
      * Finds all expenses paid for by a specific user.
      * Useful for showing a user how much they have personally spent across all groups.
      */
-    List<Expense> findByPaidBy(Long paidBy);
-
+List<Expense> findByPaidBy_Id(Long paidById);
     /**
      * CRITICAL: Used when a group is deleted.
      * Removes all expenses belonging to the group to maintain database integrity.

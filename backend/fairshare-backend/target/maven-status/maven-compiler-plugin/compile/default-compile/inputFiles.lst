@@ -1,25 +1,25 @@
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\model\Expense.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\payload\ExpenseRequest.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\service\GroupService.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\controller\GroupController.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\FairShareApplication.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\model\User.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\repository\GroupMemberRepository.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\dto\SignupRequest.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\service\BalanceService.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\model\GroupMember.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\config\WebConfig.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\dto\LoginRequest.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\controller\AuthController.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\repository\ExpenseSplitRepository.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\dto\ExpenseRequest.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\repository\ExpenseRepository.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\payload\LoginRequest.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\repository\GroupRepository.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\controller\ExpenseController.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\service\AuthService.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\service\ExpenseService.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\model\ExpenseSplit.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\payload\SignupRequest.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\model\Group.java
-C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\repository\UserRepository.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\controller\GroupController.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\repository\ExpenseSplitRepository.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\payload\LoginRequest.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\repository\ExpenseRepository.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\repository\UserRepository.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\dto\LoginRequest.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\payload\ExpenseRequest.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\model\User.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\model\GroupMember.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\repository\GroupRepository.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\model\Group.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\config\WebConfig.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\dto\ExpenseRequest.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\service\BalanceService.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\repository\GroupMemberRepository.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\controller\ExpenseController.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\service\GroupService.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\service\AuthService.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\service\ExpenseService.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\controller\AuthController.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\model\Expense.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\dto\SignupRequest.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\FairShareApplication.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\payload\SignupRequest.java
+C:\Users\khush\OneDrive\Desktop\DePaul\Software Engineering Studio\New folder\FairShare\backend\fairshare-backend\src\main\java\com\fairshare\model\ExpenseSplit.java

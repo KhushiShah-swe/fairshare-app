@@ -5,9 +5,6 @@ import com.fairshare.model.GroupMember;
 import com.fairshare.model.User;
 import com.fairshare.service.GroupService;
 import com.fairshare.repository.UserRepository;
-import com.fairshare.dto.ExpenseDTO;
-import com.fairshare.dto.BalanceDTO;
-import com.fairshare.dto.GroupDetailsDTO;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,13 +18,11 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class GroupController {
 
-    @Autowired 
+    @Autowired
     private GroupService groupService;
 
     @Autowired
     private UserRepository userRepository;
-
-    // ---------------- Existing Endpoints ----------------
 
     @GetMapping("/group-members/{groupId}")
     public ResponseEntity<?> getGroupMembers(@PathVariable Long groupId) {
@@ -53,16 +48,16 @@ public class GroupController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createGroup(
-            @RequestParam String name, 
-            @RequestParam String type, 
+            @RequestParam String name,
+            @RequestParam String type,
             @RequestParam Long userId) {
         try {
-            if (name.trim().isEmpty()) {
+            if (name == null || name.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("Group name cannot be empty.");
             }
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("User not found."));
-            Group createdGroup = groupService.createGroup(name.trim(), type.trim(), user);
+            Group createdGroup = groupService.createGroup(name.trim(), type != null ? type.trim() : null, user);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdGroup);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -71,7 +66,7 @@ public class GroupController {
 
     @PostMapping("/join")
     public ResponseEntity<String> joinGroup(
-            @RequestParam String code, 
+            @RequestParam String code,
             @RequestParam Long userId) {
         try {
             User user = userRepository.findById(userId)
@@ -91,7 +86,7 @@ public class GroupController {
             @RequestParam String newName,
             @RequestParam Long userId) {
         try {
-            if (newName.trim().isEmpty()) {
+            if (newName == null || newName.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("New group name cannot be empty.");
             }
             Group updatedGroup = groupService.updateGroupName(groupId, newName.trim(), userId);
@@ -124,19 +119,6 @@ public class GroupController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting group.");
-        }
-    }
-
-    // ---------------- NEW: Group Details with Expenses & Balances ----------------
-
-    @GetMapping("/{groupId}/details")
-    public ResponseEntity<?> getGroupDetails(@PathVariable Long groupId) {
-        try {
-            GroupDetailsDTO groupDetails = groupService.getGroupDetails(groupId);
-            return ResponseEntity.ok(groupDetails);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error fetching group details: " + e.getMessage());
         }
     }
 }

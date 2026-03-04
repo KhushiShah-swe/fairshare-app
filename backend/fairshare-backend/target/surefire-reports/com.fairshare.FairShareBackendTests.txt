@@ -1,0 +1,16 @@
+-------------------------------------------------------------------------------
+Test set: com.fairshare.FairShareBackendTests
+-------------------------------------------------------------------------------
+Tests run: 6, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 7.951 s <<< FAILURE! -- in com.fairshare.FairShareBackendTests
+com.fairshare.FairShareBackendTests.testIntentionalFailureForProfessor -- Time elapsed: 0.628 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: This test failed intentionally to demonstrate build failure ==> expected: <3> but was: <5>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at com.fairshare.FairShareBackendTests.testIntentionalFailureForProfessor(FairShareBackendTests.java:52)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
