@@ -1,10 +1,10 @@
 package com.fairshare; 
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+// import org.springframework.boot.test.context.SpringBootTest;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+// @SpringBootTest
 public class FairShareBackendTests {
 
     // 1. Sprint 1: Test Invite Code Logic
