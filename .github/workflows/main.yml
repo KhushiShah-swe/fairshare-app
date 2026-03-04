@@ -16,7 +16,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Run Backend Tests
-        # This will pass since your logic errors were fixed
+        # Your backend already passes
         run: mvn test
         working-directory: ./backend/fairshare-backend
 
@@ -31,9 +31,9 @@ jobs:
         working-directory: ./frontend/fairshare-frontend
 
       - name: Run Frontend Tests
-        # FIX: Explicitly set permissions and use the direct path to the vitest binary
-        # to prevent the 'Exit code 127' permission error
+        # FIX: We use --environment node to bypass the JSDOM ESM crash
+        # and chmod to fix the permission denied error
         run: |
           chmod +x ./node_modules/.bin/vitest
-          ./node_modules/.bin/vitest run
+          ./node_modules/.bin/vitest run --environment node
         working-directory: ./frontend/fairshare-frontend
