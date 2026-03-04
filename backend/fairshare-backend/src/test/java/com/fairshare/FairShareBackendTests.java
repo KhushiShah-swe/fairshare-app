@@ -44,11 +44,11 @@ public class FairShareBackendTests {
         String role = "ADMIN";
         assertTrue(role.equals("ADMIN"), "Group creator must be assigned ADMIN role");
     }
-@Test
-void testIntentionalFailureForProfessor() {
+// @Test
+// void testIntentionalFailureForProfessor() {
     // This will fail the build intentionally
-    int expectedMembers = 3;
-    int actualMembers = 5;
-    assertEquals(expectedMembers, actualMembers, "This test failed intentionally to demonstrate build failure");
-}
+   //  int expectedMembers = 3;
+    // int actualMembers = 5;
+    // assertEquals(expectedMembers, actualMembers, "This test failed intentionally to demonstrate build failure");
+// }
 }
