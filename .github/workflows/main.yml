@@ -8,17 +8,19 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # Backend Tests (Maven)
+      # 1. Backend Automated Build & Test (Maven)
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
+
       - name: Run Backend Tests
+        # This will pass since your logic errors were fixed
         run: mvn test
         working-directory: ./backend/fairshare-backend
 
-     # Frontend Automated Build & Test
+      # 2. Frontend Automated Build & Test (Vite/Vitest)
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -29,7 +31,9 @@ jobs:
         working-directory: ./frontend/fairshare-frontend
 
       - name: Run Frontend Tests
-        # FIX: Added 'npx' to execute vitest from node_modules correctly
-        # This bypasses the "Permission denied" error seen in image_af1e60.png
-        run: npx vitest run
+        # FIX: Explicitly set permissions and use the direct path to the vitest binary
+        # to prevent the 'Exit code 127' permission error
+        run: |
+          chmod +x ./node_modules/.bin/vitest
+          ./node_modules/.bin/vitest run
         working-directory: ./frontend/fairshare-frontend
