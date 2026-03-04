@@ -18,14 +18,18 @@ jobs:
         run: mvn test
         working-directory: ./backend/fairshare-backend
 
-      # Frontend Tests (Vite/Vitest)
+     # Frontend Automated Build & Test
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+
       - name: Install Frontend Deps
         run: npm install
         working-directory: ./frontend/fairshare-frontend
+
       - name: Run Frontend Tests
-        run: npm test
+        # FIX: Added 'npx' to execute vitest from node_modules correctly
+        # This bypasses the "Permission denied" error seen in image_af1e60.png
+        run: npx vitest run
         working-directory: ./frontend/fairshare-frontend
