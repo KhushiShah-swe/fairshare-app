@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Expense.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">FairShare Backend</a> &gt; <a href="index.source.html" class="el_package">com.fairshare.model</a> &gt; <span class="el_source">Expense.java</span></div><h1>Expense.java</h1><pre class="source lang-java linenums">package com.fairshare.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+@Entity
+@Table(name=&quot;expenses&quot;)
+public class Expense {
+    @Id 
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private String description;
+    
+    private Double amount;
+    
+    /**
+     * CHANGED: Instead of a Long ID, we use the User entity.
+     * @ManyToOne: Many expenses can be paid by one User.
+     * @JoinColumn: Maps to 'paid_by_id' in your database table.
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = &quot;paid_by_id&quot;)
+    private User paidBy;
+    
+    // Keeping Group ID as Long for now (or you can map it to a Group entity similarly)
+    private Long groupId;
+
+    private String category; 
+    
+    private LocalDate expenseDate; 
+    
+    @Column(columnDefinition = &quot;TEXT&quot;)
+    private String notes; 
+
+<span class="fc" id="L39">    @Column(updatable = false)</span>
+<span class="fc" id="L40">    private LocalDateTime createdAt = LocalDateTime.now();</span>
+
+    // =========================
+    // Receipt Upload (NEW)
+    // =========================
+
+    /**
+     * Stores the uploaded receipt file bytes (PDF/Image).
+     * We ignore it in normal JSON responses so your /expenses/group/{groupId}
+     * endpoint won't return huge payloads.
+     */
+    @Lob
+    @JsonIgnore
+    @Column(name = &quot;receipt_data&quot;, columnDefinition = &quot;LONGBLOB&quot;)
+    private byte[] receiptData;
+
+    /**
+     * Original filename (example: dunkin_receipt.pdf)
+     */
+    @Column(name = &quot;receipt_file_name&quot;)
+    private String receiptFileName;
+
+    /**
+     * MIME type (example: application/pdf, image/jpeg)
+     */
+    @Column(name = &quot;receipt_content_type&quot;)
+    private String receiptContentType;
+
+    /**
+     * Simple flag for UI to show &quot;View Receipt&quot; button.
+     */
+<span class="fc" id="L71">    @Column(name = &quot;has_receipt&quot;)</span>
+<span class="fc" id="L72">    private Boolean hasReceipt = false;</span>
+
+<span class="fc" id="L74">    public Expense() {}</span>
+
+    // Getters and Setters
+<span class="fc" id="L77">    public Long getId() { return id; }</span>
+<span class="fc" id="L78">    public void setId(Long id) { this.id = id; }</span>
+
+<span class="fc" id="L80">    public String getDescription() { return description; }</span>
+<span class="fc" id="L81">    public void setDescription(String description) { this.description = description; }</span>
+
+<span class="fc" id="L83">    public Double getAmount() { return amount; }</span>
+<span class="fc" id="L84">    public void setAmount(Double amount) { this.amount = amount; }</span>
+
+    // UPDATED Getter/Setter for User object
+<span class="fc" id="L87">    public User getPaidBy() { return paidBy; }</span>
+<span class="fc" id="L88">    public void setPaidBy(User paidBy) { this.paidBy = paidBy; }</span>
+
+<span class="fc" id="L90">    public Long getGroupId() { return groupId; }</span>
+<span class="fc" id="L91">    public void setGroupId(Long groupId) { this.groupId = groupId; }</span>
+
+<span class="nc" id="L93">    public String getCategory() { return category; }</span>
+<span class="fc" id="L94">    public void setCategory(String category) { this.category = category; }</span>
+
+<span class="nc" id="L96">    public LocalDate getExpenseDate() { return expenseDate; }</span>
+<span class="fc" id="L97">    public void setExpenseDate(LocalDate expenseDate) { this.expenseDate = expenseDate; }</span>
+
+<span class="nc" id="L99">    public String getNotes() { return notes; }</span>
+<span class="fc" id="L100">    public void setNotes(String notes) { this.notes = notes; }</span>
+
+<span class="nc" id="L102">    public LocalDateTime getCreatedAt() { return createdAt; }</span>
+<span class="nc" id="L103">    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }</span>
+
+    // =========================
+    // Receipt Getters/Setters (NEW)
+    // =========================
+
+<span class="fc" id="L109">    public byte[] getReceiptData() { return receiptData; }</span>
+<span class="fc" id="L110">    public void setReceiptData(byte[] receiptData) { this.receiptData = receiptData; }</span>
+
+<span class="fc" id="L112">    public String getReceiptFileName() { return receiptFileName; }</span>
+<span class="fc" id="L113">    public void setReceiptFileName(String receiptFileName) { this.receiptFileName = receiptFileName; }</span>
+
+<span class="fc" id="L115">    public String getReceiptContentType() { return receiptContentType; }</span>
+<span class="fc" id="L116">    public void setReceiptContentType(String receiptContentType) { this.receiptContentType = receiptContentType; }</span>
+
+<span class="fc" id="L118">    public Boolean getHasReceipt() { return hasReceipt; }</span>
+<span class="fc" id="L119">    public void setHasReceipt(Boolean hasReceipt) { this.hasReceipt = hasReceipt; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

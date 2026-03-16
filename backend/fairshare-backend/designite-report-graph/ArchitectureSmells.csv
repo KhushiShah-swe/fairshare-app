@@ -1,0 +1,4 @@
+Project Name,Package Name,Architecture Smell,Cause of the Smell
+java,com.fairshare.controller,Scattered Functionality,The tool detected the smell in this component because a set of two or more components realizes the same high-level architectural concern. Following components realize the same concern: com.fairshare.model; com.fairshare.service.
+java,com.fairshare.service,Scattered Functionality,The tool detected the smell in this component because a set of two or more components realizes the same high-level architectural concern. Following components realize the same concern: com.fairshare.payload; com.fairshare.model.
+java,com.fairshare.service,Scattered Functionality,The tool detected the smell in this component because a set of two or more components realizes the same high-level architectural concern. Following components realize the same concern: com.fairshare.model; com.fairshare.repository.

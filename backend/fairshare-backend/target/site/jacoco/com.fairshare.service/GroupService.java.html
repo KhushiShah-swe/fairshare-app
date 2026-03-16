@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">FairShare Backend</a> &gt; <a href="index.source.html" class="el_package">com.fairshare.service</a> &gt; <span class="el_source">GroupService.java</span></div><h1>GroupService.java</h1><pre class="source lang-java linenums">package com.fairshare.service;
+
+import com.fairshare.model.Group;
+import com.fairshare.model.GroupMember;
+import com.fairshare.model.User;
+import com.fairshare.repository.GroupRepository;
+import com.fairshare.repository.GroupMemberRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.UUID;
+
+@Service
+<span class="fc" id="L17">public class GroupService {</span>
+
+    @Autowired
+    private GroupRepository groupRepo;
+
+    @Autowired
+    private GroupMemberRepository memberRepo;
+
+    // ---------------- READ ----------------
+
+    @Transactional(readOnly = true)
+    public List&lt;GroupMember&gt; getGroupMembers(Long groupId) {
+<span class="nc" id="L29">        return memberRepo.findByGroupId(groupId);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public List&lt;GroupMember&gt; getUserGroups(Long userId) {
+<span class="nc" id="L34">        return memberRepo.findByUserId(userId);</span>
+    }
+
+    // ---------------- CREATE / JOIN ----------------
+
+    @Transactional
+    public Group createGroup(String name, String type, User creator) {
+<span class="fc" id="L41">        Group g = new Group();</span>
+<span class="fc" id="L42">        g.setName(name);</span>
+<span class="fc" id="L43">        g.setType(type);</span>
+<span class="fc" id="L44">        g.setInviteCode(generateInviteCode());</span>
+
+<span class="fc" id="L46">        Group saved = groupRepo.save(g);</span>
+
+<span class="fc" id="L48">        GroupMember gm = new GroupMember();</span>
+<span class="fc" id="L49">        gm.setGroup(saved);</span>
+<span class="fc" id="L50">        gm.setUser(creator);</span>
+<span class="fc" id="L51">        gm.setRole(&quot;ADMIN&quot;); // ✅ IMPORTANT for settings/admin buttons</span>
+<span class="fc" id="L52">        memberRepo.save(gm);</span>
+
+<span class="fc" id="L54">        return saved;</span>
+    }
+
+    @Transactional
+    public String joinGroup(String code, User user) {
+<span class="fc" id="L59">        Group group = groupRepo.findByInviteCode(code)</span>
+<span class="pc" id="L60">                .orElseThrow(() -&gt; new RuntimeException(&quot;Invalid group code.&quot;));</span>
+
+        // Prevent duplicate join
+<span class="fc" id="L63">        GroupMember existing = findMembership(group.getId(), user.getId());</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (existing != null) {</span>
+<span class="fc" id="L65">            return &quot;You are already a member of this group.&quot;;</span>
+        }
+
+<span class="fc" id="L68">        GroupMember gm = new GroupMember();</span>
+<span class="fc" id="L69">        gm.setGroup(group);</span>
+<span class="fc" id="L70">        gm.setUser(user);</span>
+<span class="fc" id="L71">        gm.setRole(&quot;MEMBER&quot;); // ✅ joiners are MEMBER</span>
+<span class="fc" id="L72">        memberRepo.save(gm);</span>
+
+<span class="fc" id="L74">        return &quot;Joined group successfully.&quot;;</span>
+    }
+
+    // ---------------- UPDATE ----------------
+
+    @Transactional
+    public Group updateGroupName(Long groupId, String newName, Long userId) {
+<span class="fc" id="L81">        GroupMember membership = findMembership(groupId, userId);</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        if (membership == null) {</span>
+<span class="nc" id="L83">            throw new RuntimeException(&quot;You are not a member of this group.&quot;);</span>
+        }
+
+        // ✅ Only ADMIN can rename
+<span class="pc bpc" id="L87" title="1 of 4 branches missed.">        if (membership.getRole() == null || !membership.getRole().equalsIgnoreCase(&quot;ADMIN&quot;)) {</span>
+<span class="fc" id="L88">            throw new RuntimeException(&quot;Only ADMIN can rename the group.&quot;);</span>
+        }
+
+<span class="fc" id="L91">        Group group = groupRepo.findById(groupId)</span>
+<span class="pc" id="L92">                .orElseThrow(() -&gt; new RuntimeException(&quot;Group not found.&quot;));</span>
+
+<span class="fc" id="L94">        group.setName(newName);</span>
+<span class="fc" id="L95">        return groupRepo.save(group);</span>
+    }
+
+    // ---------------- LEAVE / DELETE ----------------
+
+    @Transactional
+    public void leaveGroup(Long groupId, Long userId) {
+<span class="fc" id="L102">        GroupMember membership = findMembership(groupId, userId);</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        if (membership == null) {</span>
+<span class="nc" id="L104">            throw new RuntimeException(&quot;You are not a member of this group.&quot;);</span>
+        }
+
+<span class="fc" id="L107">        memberRepo.delete(membership);</span>
+<span class="fc" id="L108">    }</span>
+
+    @Transactional
+    public void deleteGroup(Long groupId, Long userId) {
+<span class="fc" id="L112">        GroupMember membership = findMembership(groupId, userId);</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">        if (membership == null) {</span>
+<span class="nc" id="L114">            throw new RuntimeException(&quot;You are not allowed to delete this group.&quot;);</span>
+        }
+
+        // ✅ Only ADMIN can delete
+<span class="pc bpc" id="L118" title="2 of 4 branches missed.">        if (membership.getRole() == null || !membership.getRole().equalsIgnoreCase(&quot;ADMIN&quot;)) {</span>
+<span class="nc" id="L119">            throw new RuntimeException(&quot;Only ADMIN can delete this group.&quot;);</span>
+        }
+
+        // Delete members first (FK constraints)
+<span class="fc" id="L123">        List&lt;GroupMember&gt; members = memberRepo.findByGroupId(groupId);</span>
+<span class="fc" id="L124">        memberRepo.deleteAll(members);</span>
+
+<span class="fc" id="L126">        groupRepo.deleteById(groupId);</span>
+<span class="fc" id="L127">    }</span>
+
+    // ---------------- HELPERS ----------------
+
+    private GroupMember findMembership(Long groupId, Long userId) {
+<span class="fc" id="L132">        return memberRepo.findByGroupId(groupId).stream()</span>
+<span class="pc bpc" id="L133" title="2 of 4 branches missed.">                .filter(m -&gt; m.getUser() != null &amp;&amp; m.getUser().getId().equals(userId))</span>
+<span class="fc" id="L134">                .findFirst()</span>
+<span class="fc" id="L135">                .orElse(null);</span>
+    }
+
+    private String generateInviteCode() {
+<span class="fc" id="L139">        return UUID.randomUUID().toString().replace(&quot;-&quot;, &quot;&quot;).substring(0, 8).toUpperCase();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

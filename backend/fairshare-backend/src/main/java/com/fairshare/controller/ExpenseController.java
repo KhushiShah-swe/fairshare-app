@@ -14,9 +14,9 @@ import org.springframework.core.io.ByteArrayResource;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.List;
-import java.util.HashMap;
 import java.util.Set;
 
 @RestController
@@ -33,29 +33,27 @@ public class ExpenseController {
     @PostMapping("/add")
     public ResponseEntity<?> addExpense(@RequestBody ExpenseRequest req) {
         try {
-            // --- Basic validations (existing) ---
             if (req.getAmount() <= 0) {
                 return ResponseEntity.badRequest().body("Amount must be greater than zero.");
             }
+
             if (req.getParticipants() == null || req.getParticipants().isEmpty()) {
                 return ResponseEntity.badRequest().body("Participants list cannot be empty.");
             }
 
-            // --- Sprint 2: Default splitType to EQUAL if missing (keeps old behavior working) ---
             String splitType = req.getSplitType();
             if (splitType == null || splitType.trim().isEmpty()) {
                 splitType = "EQUAL";
                 req.setSplitType(splitType);
             }
 
-            // --- Sprint 2: Validate percentage split input ---
             if ("PERCENTAGE".equalsIgnoreCase(splitType)) {
                 if (req.getPercentages() == null || req.getPercentages().isEmpty()) {
                     return ResponseEntity.badRequest().body("Percentages map is required for PERCENTAGE split.");
                 }
 
-                // Ensure only selected participants are included and sum is 100
                 Set<String> pctKeys = req.getPercentages().keySet();
+
                 for (Long pid : req.getParticipants()) {
                     if (!pctKeys.contains(String.valueOf(pid))) {
                         return ResponseEntity.badRequest()
@@ -63,7 +61,6 @@ public class ExpenseController {
                     }
                 }
 
-                // If percentages contains extra users not in participants, reject
                 for (String userIdStr : pctKeys) {
                     Long uid = Long.valueOf(userIdStr);
                     if (!req.getParticipants().contains(uid)) {
@@ -72,7 +69,6 @@ public class ExpenseController {
                     }
                 }
 
-                // Sum must be 100 (with tiny tolerance)
                 double sum = 0.0;
                 for (Map.Entry<String, Double> entry : req.getPercentages().entrySet()) {
                     Double val = entry.getValue();
@@ -89,8 +85,12 @@ public class ExpenseController {
                 }
             }
 
-            expenseService.addExpense(req);
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Expense added successfully"));
+            Expense savedExpense = expenseService.addExpense(req);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "message", "Expense added successfully",
+                    "expenseId", savedExpense.getId()
+            ));
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -98,10 +98,6 @@ public class ExpenseController {
         }
     }
 
-    /**
-     * GET: Fetches a single expense by ID.
-     * Required for pre-filling the Edit form in EditExpense.jsx.
-     */
     @GetMapping("/{id}")
     public ResponseEntity<Expense> getExpenseById(@PathVariable Long id) {
         try {
@@ -112,10 +108,6 @@ public class ExpenseController {
         }
     }
 
-    /**
-     * Sprint 2 (Helpful for Edit):
-     * GET: Fetch splits + splitType info for an expense.
-     */
     @GetMapping("/{id}/splits")
     public ResponseEntity<?> getExpenseSplits(@PathVariable Long id) {
         try {
@@ -129,10 +121,6 @@ public class ExpenseController {
         }
     }
 
-    /**
-     * GET: Fetches all expenses for a specific group.
-     * This is what populates the history in GroupDetails.jsx.
-     */
     @GetMapping("/group/{groupId}")
     public ResponseEntity<List<Expense>> getExpensesByGroup(@PathVariable Long groupId) {
         try {
@@ -143,9 +131,6 @@ public class ExpenseController {
         }
     }
 
-    /**
-     * GET: Returns Map of Group ID to Balance.
-     */
     @GetMapping("/balance/{userId}")
     public ResponseEntity<Map<Long, Double>> getUserBalances(@PathVariable Long userId) {
         try {
@@ -156,9 +141,6 @@ public class ExpenseController {
         }
     }
 
-    /**
-     * GET: Fetches a list of recent transactions for the user dashboard.
-     */
     @GetMapping("/activity/{userId}")
     public ResponseEntity<List<Map<String, Object>>> getRecentActivity(@PathVariable Long userId) {
         try {
@@ -169,28 +151,23 @@ public class ExpenseController {
         }
     }
 
-    /**
-     * PUT: Updates an existing expense by ID.
-     */
     @PutMapping("/edit/{id}")
     public ResponseEntity<?> editExpense(@PathVariable Long id, @RequestBody ExpenseRequest req) {
         try {
-            // --- Basic validations (same as add) ---
             if (req.getAmount() <= 0) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Amount must be greater than zero."));
             }
+
             if (req.getParticipants() == null || req.getParticipants().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Participants list cannot be empty."));
             }
 
-            // Default splitType for backward compatibility
             String splitType = req.getSplitType();
             if (splitType == null || splitType.trim().isEmpty()) {
                 splitType = "EQUAL";
                 req.setSplitType(splitType);
             }
 
-            // Validate percentage split for edits too
             if ("PERCENTAGE".equalsIgnoreCase(splitType)) {
                 if (req.getPercentages() == null || req.getPercentages().isEmpty()) {
                     return ResponseEntity.badRequest().body(Map.of("error", "Percentages map is required for PERCENTAGE split."));
@@ -230,7 +207,10 @@ public class ExpenseController {
             }
 
             expenseService.editExpense(id, req);
-            return ResponseEntity.ok(Map.of("message", "Expense updated successfully"));
+            return ResponseEntity.ok(Map.of(
+                    "message", "Expense updated successfully",
+                    "expenseId", id
+            ));
 
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
@@ -240,9 +220,6 @@ public class ExpenseController {
         }
     }
 
-    /**
-     * DELETE: Deletes an expense and its associated splits.
-     */
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteExpense(@PathVariable Long id) {
         try {
@@ -256,15 +233,6 @@ public class ExpenseController {
         }
     }
 
-    // ============================================================
-    // NEW: Receipt Upload / View (added without changing existing)
-    // ============================================================
-
-    /**
-     * POST: Upload (or replace) a receipt for an expense.
-     * Form-Data:
-     *   key = file, value = (image/pdf)
-     */
     @PostMapping(value = "/{id}/receipt", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadReceipt(
             @PathVariable Long id,
@@ -280,7 +248,6 @@ public class ExpenseController {
 
             expenseService.uploadReceipt(id, file.getBytes(), originalName, contentType);
 
-            // return metadata helpful for UI
             return ResponseEntity.ok(Map.of(
                     "message", "Receipt uploaded successfully",
                     "expenseId", id,
@@ -295,10 +262,6 @@ public class ExpenseController {
         }
     }
 
-    /**
-     * GET: Receipt metadata only (no bytes)
-     * Useful to show "View Receipt" button.
-     */
     @GetMapping("/{id}/receipt/info")
     public ResponseEntity<?> getReceiptInfo(@PathVariable Long id) {
         try {
@@ -312,19 +275,14 @@ public class ExpenseController {
         }
     }
 
-    /**
-     * GET: Download / view the receipt bytes.
-     * Returns:
-     *  - Content-Type = stored contentType (image/* or application/pdf)
-     *  - Content-Disposition = inline (browser preview) with filename
-     */
     @GetMapping("/{id}/receipt")
     public ResponseEntity<?> downloadReceipt(@PathVariable Long id) {
         try {
             Expense expense = expenseService.getExpenseWithReceipt(id);
 
             if (expense.getReceiptData() == null || expense.getReceiptData().length == 0) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "No receipt found for this expense."));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "No receipt found for this expense."));
             }
 
             String contentType = expense.getReceiptContentType() != null
@@ -350,9 +308,6 @@ public class ExpenseController {
         }
     }
 
-    /**
-     * DELETE: Remove receipt from an expense.
-     */
     @DeleteMapping("/{id}/receipt")
     public ResponseEntity<?> deleteReceipt(@PathVariable Long id) {
         try {
@@ -363,6 +318,72 @@ public class ExpenseController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Error deleting receipt: " + e.getMessage()));
+        }
+    }
+
+    // =========================
+    // Sprint 3 Endpoints
+    // =========================
+
+    /**
+     * GET: Generate automatic settlement instructions for a group.
+     */
+    @GetMapping("/group/{groupId}/settlement-plan")
+    public ResponseEntity<?> getSettlementPlan(@PathVariable Long groupId) {
+        try {
+            List<Map<String, Object>> plan = expenseService.getSettlementPlanByGroup(groupId);
+            return ResponseEntity.ok(plan);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error generating settlement plan: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * POST: Clear all debts for a group.
+     * NOTE: In current implementation, this clears the group's expense ledger.
+     */
+    @PostMapping("/group/{groupId}/clear-debts")
+    public ResponseEntity<?> clearAllDebts(@PathVariable Long groupId) {
+        try {
+            Map<String, Object> result = expenseService.clearAllDebtsForGroup(groupId);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error clearing debts: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * GET: Full balance sheet data for a group.
+     */
+    @GetMapping("/group/{groupId}/balance-sheet")
+    public ResponseEntity<?> getBalanceSheet(@PathVariable Long groupId) {
+        try {
+            Map<String, Object> result = expenseService.getBalanceSheetData(groupId);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error fetching balance sheet: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * GET: Export full balance sheet as CSV.
+     */
+    @GetMapping("/group/{groupId}/export/csv")
+    public ResponseEntity<?> exportBalanceSheetCsv(@PathVariable Long groupId) {
+        try {
+            String csv = expenseService.exportBalanceSheetCsv(groupId);
+            ByteArrayResource resource = new ByteArrayResource(csv.getBytes(StandardCharsets.UTF_8));
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType("text/csv"))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"group_" + groupId + "_balance_sheet.csv\"")
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error exporting CSV: " + e.getMessage()));
         }
     }
 }

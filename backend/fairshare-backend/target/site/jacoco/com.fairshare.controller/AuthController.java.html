@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">FairShare Backend</a> &gt; <a href="index.source.html" class="el_package">com.fairshare.controller</a> &gt; <span class="el_source">AuthController.java</span></div><h1>AuthController.java</h1><pre class="source lang-java linenums">package com.fairshare.controller;
+
+import com.fairshare.service.AuthService;
+
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.HttpHeaders;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.servlet.http.HttpSession;
+
+import com.fairshare.model.User;
+import com.fairshare.payload.SignupRequest;
+import com.fairshare.payload.LoginRequest;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping(&quot;/api/auth&quot;)
+<span class="fc" id="L33">public class AuthController {</span>
+
+    @Autowired
+    private AuthService authService;
+
+    @PostMapping(&quot;/signup&quot;)
+    public User signup(@RequestBody SignupRequest req) {
+<span class="fc" id="L40">        return authService.signup(req);</span>
+    }
+
+    @PostMapping(&quot;/login&quot;)
+    public User login(@RequestBody LoginRequest req, HttpSession session) {
+<span class="fc" id="L45">        User user = authService.login(req);</span>
+<span class="fc" id="L46">        session.setAttribute(&quot;user&quot;, user);</span>
+<span class="fc" id="L47">        return user;</span>
+    }
+
+    // =========================
+    // Sprint 3: Zelle Info Endpoints
+    // =========================
+
+    /**
+     * PUT: Update Zelle email and/or phone for a user.
+     */
+    @PutMapping(&quot;/{userId}/zelle&quot;)
+    public ResponseEntity&lt;?&gt; updateZelleInfo(
+            @PathVariable Long userId,
+            @RequestParam(required = false) String zelleEmail,
+            @RequestParam(required = false) String zellePhone
+    ) {
+        try {
+<span class="fc" id="L64">            User updatedUser = authService.updateZelleInfo(userId, zelleEmail, zellePhone);</span>
+<span class="fc" id="L65">            return ResponseEntity.ok(Map.of(</span>
+                    &quot;message&quot;, &quot;Zelle info updated successfully&quot;,
+<span class="fc" id="L67">                    &quot;userId&quot;, updatedUser.getId(),</span>
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">                    &quot;zelleEmail&quot;, updatedUser.getZelleEmail() != null ? updatedUser.getZelleEmail() : &quot;&quot;,</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">                    &quot;zellePhone&quot;, updatedUser.getZellePhone() != null ? updatedUser.getZellePhone() : &quot;&quot;,</span>
+<span class="fc" id="L70">                    &quot;hasZelleQr&quot;, Boolean.TRUE.equals(updatedUser.getHasZelleQr())</span>
+            ));
+<span class="fc" id="L72">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L73">            return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="fc" id="L74">                    .body(Map.of(&quot;error&quot;, e.getMessage()));</span>
+<span class="nc" id="L75">        } catch (Exception e) {</span>
+<span class="nc" id="L76">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L77">                    .body(Map.of(&quot;error&quot;, &quot;Error updating Zelle info: &quot; + e.getMessage()));</span>
+        }
+    }
+
+    /**
+     * POST: Upload or replace Zelle QR image for a user.
+     * Form-Data: key=file
+     */
+    @PostMapping(value = &quot;/{userId}/zelle/qr&quot;, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity&lt;?&gt; uploadZelleQr(
+            @PathVariable Long userId,
+            @RequestParam(&quot;file&quot;) MultipartFile file
+    ) {
+        try {
+<span class="pc bpc" id="L91" title="1 of 4 branches missed.">            if (file == null || file.isEmpty()) {</span>
+<span class="fc" id="L92">                return ResponseEntity.badRequest().body(Map.of(&quot;error&quot;, &quot;Zelle QR file is required.&quot;));</span>
+            }
+
+<span class="fc" id="L95">            String contentType = file.getContentType();</span>
+<span class="fc" id="L96">            String originalName = file.getOriginalFilename();</span>
+
+<span class="fc" id="L98">            authService.uploadZelleQr(userId, file.getBytes(), originalName, contentType);</span>
+
+<span class="fc" id="L100">            return ResponseEntity.ok(Map.of(</span>
+                    &quot;message&quot;, &quot;Zelle QR uploaded successfully&quot;,
+                    &quot;userId&quot;, userId,
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">                    &quot;fileName&quot;, originalName != null ? originalName : &quot;&quot;,</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">                    &quot;contentType&quot;, contentType != null ? contentType : &quot;&quot;,</span>
+<span class="fc" id="L105">                    &quot;hasZelleQr&quot;, true</span>
+            ));
+<span class="fc" id="L107">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L108">            return ResponseEntity.status(HttpStatus.BAD_REQUEST)</span>
+<span class="fc" id="L109">                    .body(Map.of(&quot;error&quot;, e.getMessage()));</span>
+<span class="nc" id="L110">        } catch (Exception e) {</span>
+<span class="nc" id="L111">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L112">                    .body(Map.of(&quot;error&quot;, &quot;Error uploading Zelle QR: &quot; + e.getMessage()));</span>
+        }
+    }
+
+    /**
+     * GET: Fetch Zelle info for a user.
+     */
+    @GetMapping(&quot;/{userId}/zelle&quot;)
+    public ResponseEntity&lt;?&gt; getZelleInfo(@PathVariable Long userId) {
+        try {
+<span class="fc" id="L122">            Map&lt;String, Object&gt; info = authService.getZelleInfo(userId);</span>
+<span class="fc" id="L123">            return ResponseEntity.ok(info);</span>
+<span class="fc" id="L124">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L125">            return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="fc" id="L126">                    .body(Map.of(&quot;error&quot;, e.getMessage()));</span>
+<span class="nc" id="L127">        } catch (Exception e) {</span>
+<span class="nc" id="L128">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L129">                    .body(Map.of(&quot;error&quot;, &quot;Error fetching Zelle info: &quot; + e.getMessage()));</span>
+        }
+    }
+
+    /**
+     * GET: View/download Zelle QR image for a user.
+     */
+    @GetMapping(&quot;/{userId}/zelle/qr&quot;)
+    public ResponseEntity&lt;?&gt; getZelleQr(@PathVariable Long userId) {
+        try {
+<span class="fc" id="L139">            User user = authService.getUserWithZelleQr(userId);</span>
+
+<span class="pc bpc" id="L141" title="1 of 4 branches missed.">            if (user.getZelleQrData() == null || user.getZelleQrData().length == 0) {</span>
+<span class="fc" id="L142">                return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="fc" id="L143">                        .body(Map.of(&quot;error&quot;, &quot;No Zelle QR found for this user.&quot;));</span>
+            }
+
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">            String contentType = user.getZelleQrContentType() != null</span>
+<span class="fc" id="L147">                    ? user.getZelleQrContentType()</span>
+<span class="pc" id="L148">                    : MediaType.APPLICATION_OCTET_STREAM_VALUE;</span>
+
+<span class="pc bpc" id="L150" title="2 of 4 branches missed.">            String fileName = (user.getZelleQrFileName() != null &amp;&amp; !user.getZelleQrFileName().isBlank())</span>
+<span class="fc" id="L151">                    ? user.getZelleQrFileName()</span>
+<span class="pc" id="L152">                    : (&quot;user_&quot; + userId + &quot;_zelle_qr&quot;);</span>
+
+<span class="fc" id="L154">            ByteArrayResource resource = new ByteArrayResource(user.getZelleQrData());</span>
+
+<span class="fc" id="L156">            return ResponseEntity.ok()</span>
+<span class="fc" id="L157">                    .contentType(MediaType.parseMediaType(contentType))</span>
+<span class="fc" id="L158">                    .header(HttpHeaders.CONTENT_DISPOSITION, &quot;inline; filename=\&quot;&quot; + fileName + &quot;\&quot;&quot;)</span>
+<span class="fc" id="L159">                    .body(resource);</span>
+
+<span class="fc" id="L161">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L162">            return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="fc" id="L163">                    .body(Map.of(&quot;error&quot;, e.getMessage()));</span>
+<span class="nc" id="L164">        } catch (Exception e) {</span>
+<span class="nc" id="L165">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L166">                    .body(Map.of(&quot;error&quot;, &quot;Error fetching Zelle QR: &quot; + e.getMessage()));</span>
+        }
+    }
+
+    /**
+     * DELETE: Remove Zelle QR for a user.
+     */
+    @DeleteMapping(&quot;/{userId}/zelle/qr&quot;)
+    public ResponseEntity&lt;?&gt; deleteZelleQr(@PathVariable Long userId) {
+        try {
+<span class="fc" id="L176">            authService.deleteZelleQr(userId);</span>
+<span class="fc" id="L177">            return ResponseEntity.ok(Map.of(&quot;message&quot;, &quot;Zelle QR deleted successfully&quot;));</span>
+<span class="fc" id="L178">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L179">            return ResponseEntity.status(HttpStatus.NOT_FOUND)</span>
+<span class="fc" id="L180">                    .body(Map.of(&quot;error&quot;, e.getMessage()));</span>
+<span class="nc" id="L181">        } catch (Exception e) {</span>
+<span class="nc" id="L182">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L183">                    .body(Map.of(&quot;error&quot;, &quot;Error deleting Zelle QR: &quot; + e.getMessage()));</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

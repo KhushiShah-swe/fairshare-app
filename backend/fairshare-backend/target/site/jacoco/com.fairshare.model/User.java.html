@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>User.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">FairShare Backend</a> &gt; <a href="index.source.html" class="el_package">com.fairshare.model</a> &gt; <span class="el_source">User.java</span></div><h1>User.java</h1><pre class="source lang-java linenums">package com.fairshare.model;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = &quot;users&quot;)
+<span class="fc" id="L7">public class User {</span>
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+    private String email;
+    private String password;
+
+    // =========================
+    // Sprint 3: Zelle Payment Info
+    // =========================
+    private String zelleEmail;
+    private String zellePhone;
+
+    @Lob
+    @Column(name = &quot;zelle_qr_data&quot;, columnDefinition = &quot;LONGBLOB&quot;)
+    private byte[] zelleQrData;
+
+    private String zelleQrFileName;
+    private String zelleQrContentType;
+<span class="fc" id="L29">    private Boolean hasZelleQr = false;</span>
+
+    // =========================
+    // Existing getters and setters
+    // =========================
+    public Long getId() {
+<span class="fc" id="L35">        return id;</span>
+    }
+
+    public void setId(Long id) {
+<span class="fc" id="L39">        this.id = id;</span>
+<span class="fc" id="L40">    }</span>
+
+    public String getName() {
+<span class="fc" id="L43">        return name;</span>
+    }
+
+    public void setName(String name) {
+<span class="fc" id="L47">        this.name = name;</span>
+<span class="fc" id="L48">    }</span>
+
+    public String getEmail() {
+<span class="fc" id="L51">        return email;</span>
+    }
+
+    public void setEmail(String email) {
+<span class="fc" id="L55">        this.email = email;</span>
+<span class="fc" id="L56">    }</span>
+
+    public String getPassword() {
+<span class="fc" id="L59">        return password;</span>
+    }
+
+    public void setPassword(String password) {
+<span class="fc" id="L63">        this.password = password;</span>
+<span class="fc" id="L64">    }</span>
+
+    // =========================
+    // Zelle getters and setters
+    // =========================
+    public String getZelleEmail() {
+<span class="fc" id="L70">        return zelleEmail;</span>
+    }
+
+    public void setZelleEmail(String zelleEmail) {
+<span class="fc" id="L74">        this.zelleEmail = zelleEmail;</span>
+<span class="fc" id="L75">    }</span>
+
+    public String getZellePhone() {
+<span class="fc" id="L78">        return zellePhone;</span>
+    }
+
+    public void setZellePhone(String zellePhone) {
+<span class="fc" id="L82">        this.zellePhone = zellePhone;</span>
+<span class="fc" id="L83">    }</span>
+
+    public byte[] getZelleQrData() {
+<span class="fc" id="L86">        return zelleQrData;</span>
+    }
+
+    public void setZelleQrData(byte[] zelleQrData) {
+<span class="fc" id="L90">        this.zelleQrData = zelleQrData;</span>
+<span class="fc" id="L91">    }</span>
+
+    public String getZelleQrFileName() {
+<span class="fc" id="L94">        return zelleQrFileName;</span>
+    }
+
+    public void setZelleQrFileName(String zelleQrFileName) {
+<span class="fc" id="L98">        this.zelleQrFileName = zelleQrFileName;</span>
+<span class="fc" id="L99">    }</span>
+
+    public String getZelleQrContentType() {
+<span class="fc" id="L102">        return zelleQrContentType;</span>
+    }
+
+    public void setZelleQrContentType(String zelleQrContentType) {
+<span class="fc" id="L106">        this.zelleQrContentType = zelleQrContentType;</span>
+<span class="fc" id="L107">    }</span>
+
+    public Boolean getHasZelleQr() {
+<span class="fc" id="L110">        return hasZelleQr;</span>
+    }
+
+    public void setHasZelleQr(Boolean hasZelleQr) {
+<span class="fc" id="L114">        this.hasZelleQr = hasZelleQr;</span>
+<span class="fc" id="L115">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

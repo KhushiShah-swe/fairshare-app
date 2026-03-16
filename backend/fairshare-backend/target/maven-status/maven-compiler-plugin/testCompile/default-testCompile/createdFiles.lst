@@ -1,1 +1,4 @@
+com\fairshare\GroupControllerTests.class
 com\fairshare\FairShareBackendTests.class
+com\fairshare\AuthControllerTests.class
+com\fairshare\ExpenseControllerTests.class

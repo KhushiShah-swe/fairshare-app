@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">FairShare Backend</a> &gt; <a href="index.source.html" class="el_package">com.fairshare.service</a> &gt; <span class="el_source">AuthService.java</span></div><h1>AuthService.java</h1><pre class="source lang-java linenums">package com.fairshare.service;
+
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.fairshare.model.User;
+import com.fairshare.repository.UserRepository;
+import com.fairshare.payload.SignupRequest;
+import com.fairshare.payload.LoginRequest;
+
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Locale;
+
+@Service
+<span class="fc" id="L17">public class AuthService {</span>
+
+    @Autowired
+    private UserRepository userRepo;
+
+    public User signup(SignupRequest req) {
+<span class="fc" id="L23">        User u = new User();</span>
+<span class="fc" id="L24">        u.setName(req.getName());</span>
+<span class="fc" id="L25">        u.setEmail(req.getEmail());</span>
+<span class="fc" id="L26">        u.setPassword(req.getPassword()); // plain text for now</span>
+<span class="fc" id="L27">        return userRepo.save(u);</span>
+    }
+
+    public User login(LoginRequest req) {
+<span class="fc" id="L31">        return userRepo.findByEmailAndPassword(req.getEmail(), req.getPassword())</span>
+<span class="fc" id="L32">                .orElseThrow(() -&gt; new RuntimeException(&quot;Invalid credentials&quot;));</span>
+    }
+
+    // =========================
+    // Sprint 3: Zelle Info
+    // =========================
+
+    @Transactional(readOnly = true)
+    public User getUserById(Long userId) {
+<span class="nc" id="L41">        return userRepo.findById(userId)</span>
+<span class="nc" id="L42">                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found with id: &quot; + userId));</span>
+    }
+
+    @Transactional
+    public User updateZelleInfo(Long userId, String zelleEmail, String zellePhone) {
+<span class="fc" id="L47">        User user = userRepo.findById(userId)</span>
+<span class="pc" id="L48">                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found with id: &quot; + userId));</span>
+
+<span class="pc bpc" id="L50" title="2 of 4 branches missed.">        user.setZelleEmail(zelleEmail != null &amp;&amp; !zelleEmail.isBlank() ? zelleEmail.trim() : null);</span>
+<span class="pc bpc" id="L51" title="2 of 4 branches missed.">        user.setZellePhone(zellePhone != null &amp;&amp; !zellePhone.isBlank() ? zellePhone.trim() : null);</span>
+
+<span class="fc" id="L53">        return userRepo.save(user);</span>
+    }
+
+    @Transactional
+    public void uploadZelleQr(Long userId, byte[] fileBytes, String originalFileName, String contentType) {
+<span class="pc bpc" id="L58" title="2 of 4 branches missed.">        if (fileBytes == null || fileBytes.length == 0) {</span>
+<span class="nc" id="L59">            throw new RuntimeException(&quot;Zelle QR file is empty.&quot;);</span>
+        }
+
+<span class="pc bpc" id="L62" title="2 of 4 branches missed.">        if (contentType == null || contentType.isBlank()) {</span>
+<span class="nc" id="L63">            throw new RuntimeException(&quot;Zelle QR contentType is required.&quot;);</span>
+        }
+
+<span class="fc" id="L66">        boolean isImage = contentType.toLowerCase(Locale.ROOT).startsWith(&quot;image/&quot;);</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if (!isImage) {</span>
+<span class="nc" id="L68">            throw new RuntimeException(&quot;Only image files are allowed for Zelle QR.&quot;);</span>
+        }
+
+<span class="fc" id="L71">        User user = userRepo.findById(userId)</span>
+<span class="pc" id="L72">                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found with id: &quot; + userId));</span>
+
+<span class="fc" id="L74">        user.setZelleQrData(fileBytes);</span>
+<span class="fc" id="L75">        user.setZelleQrFileName(originalFileName);</span>
+<span class="fc" id="L76">        user.setZelleQrContentType(contentType);</span>
+<span class="fc" id="L77">        user.setHasZelleQr(true);</span>
+
+<span class="fc" id="L79">        userRepo.save(user);</span>
+<span class="fc" id="L80">    }</span>
+
+    @Transactional
+    public void deleteZelleQr(Long userId) {
+<span class="fc" id="L84">        User user = userRepo.findById(userId)</span>
+<span class="pc" id="L85">                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found with id: &quot; + userId));</span>
+
+<span class="fc" id="L87">        user.setZelleQrData(null);</span>
+<span class="fc" id="L88">        user.setZelleQrFileName(null);</span>
+<span class="fc" id="L89">        user.setZelleQrContentType(null);</span>
+<span class="fc" id="L90">        user.setHasZelleQr(false);</span>
+
+<span class="fc" id="L92">        userRepo.save(user);</span>
+<span class="fc" id="L93">    }</span>
+
+    @Transactional(readOnly = true)
+    public Map&lt;String, Object&gt; getZelleInfo(Long userId) {
+<span class="fc" id="L97">        User user = userRepo.findById(userId)</span>
+<span class="pc" id="L98">                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found with id: &quot; + userId));</span>
+
+<span class="fc" id="L100">        Map&lt;String, Object&gt; info = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L101">        info.put(&quot;userId&quot;, user.getId());</span>
+<span class="fc" id="L102">        info.put(&quot;name&quot;, user.getName());</span>
+<span class="fc" id="L103">        info.put(&quot;email&quot;, user.getEmail());</span>
+<span class="fc" id="L104">        info.put(&quot;zelleEmail&quot;, user.getZelleEmail());</span>
+<span class="fc" id="L105">        info.put(&quot;zellePhone&quot;, user.getZellePhone());</span>
+<span class="fc" id="L106">        info.put(&quot;hasZelleQr&quot;, Boolean.TRUE.equals(user.getHasZelleQr()));</span>
+<span class="fc" id="L107">        info.put(&quot;zelleQrFileName&quot;, user.getZelleQrFileName());</span>
+<span class="fc" id="L108">        info.put(&quot;zelleQrContentType&quot;, user.getZelleQrContentType());</span>
+
+<span class="fc" id="L110">        return info;</span>
+    }
+
+    @Transactional(readOnly = true)
+    public User getUserWithZelleQr(Long userId) {
+<span class="nc" id="L115">        return userRepo.findById(userId)</span>
+<span class="nc" id="L116">                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found with id: &quot; + userId));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

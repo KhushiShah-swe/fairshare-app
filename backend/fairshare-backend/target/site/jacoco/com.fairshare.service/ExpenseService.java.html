@@ -1,0 +1,581 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExpenseService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">FairShare Backend</a> &gt; <a href="index.source.html" class="el_package">com.fairshare.service</a> &gt; <span class="el_source">ExpenseService.java</span></div><h1>ExpenseService.java</h1><pre class="source lang-java linenums">package com.fairshare.service;
+
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.fairshare.model.Expense;
+import com.fairshare.model.ExpenseSplit;
+import com.fairshare.model.User;
+import com.fairshare.payload.ExpenseRequest;
+import com.fairshare.repository.ExpenseRepository;
+import com.fairshare.repository.ExpenseSplitRepository;
+import com.fairshare.repository.UserRepository;
+
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+<span class="fc" id="L20">public class ExpenseService {</span>
+
+    @Autowired private ExpenseRepository expenseRepo;
+    @Autowired private ExpenseSplitRepository splitRepo;
+    @Autowired private UserRepository userRepo;
+
+    public Expense getExpenseById(Long id) {
+<span class="fc" id="L27">        return expenseRepo.findById(id)</span>
+<span class="fc" id="L28">                .orElseThrow(() -&gt; new RuntimeException(&quot;Expense not found with id: &quot; + id));</span>
+    }
+
+    public List&lt;Expense&gt; getExpensesByGroupId(Long groupId) {
+<span class="nc" id="L32">        return expenseRepo.findByGroupIdOrderByIdDesc(groupId);</span>
+    }
+
+    @Transactional
+    public Expense addExpense(ExpenseRequest req) {
+<span class="fc" id="L37">        Expense e = new Expense();</span>
+<span class="fc" id="L38">        mapRequestToEntity(req, e);</span>
+<span class="fc" id="L39">        e.setGroupId(req.getGroupId());</span>
+
+<span class="fc" id="L41">        Expense savedExpense = expenseRepo.save(e);</span>
+
+<span class="fc" id="L43">        String splitType = normalizeSplitType(req.getSplitType());</span>
+<span class="fc" id="L44">        saveSplits(savedExpense, req.getParticipants(), req.getAmount(), splitType, req.getPercentages());</span>
+
+<span class="fc" id="L46">        return savedExpense;</span>
+    }
+
+    @Transactional
+    public void editExpense(Long id, ExpenseRequest req) {
+<span class="nc" id="L51">        Expense e = expenseRepo.findById(id)</span>
+<span class="nc" id="L52">                .orElseThrow(() -&gt; new RuntimeException(&quot;Expense not found&quot;));</span>
+
+<span class="nc" id="L54">        mapRequestToEntity(req, e);</span>
+<span class="nc" id="L55">        e.setGroupId(req.getGroupId());</span>
+<span class="nc" id="L56">        expenseRepo.save(e);</span>
+
+<span class="nc" id="L58">        splitRepo.deleteByExpenseId(id);</span>
+
+<span class="nc" id="L60">        String splitType = normalizeSplitType(req.getSplitType());</span>
+<span class="nc" id="L61">        saveSplits(e, req.getParticipants(), req.getAmount(), splitType, req.getPercentages());</span>
+<span class="nc" id="L62">    }</span>
+
+    @Transactional
+    public void deleteExpense(Long id) {
+<span class="nc" id="L66">        splitRepo.deleteByExpenseId(id);</span>
+<span class="nc" id="L67">        expenseRepo.deleteById(id);</span>
+<span class="nc" id="L68">    }</span>
+
+    // =========================
+    // Receipt Upload
+    // =========================
+
+    @Transactional
+    public void uploadReceipt(Long expenseId, byte[] fileBytes, String originalFileName, String contentType) {
+<span class="pc bpc" id="L76" title="2 of 4 branches missed.">        if (fileBytes == null || fileBytes.length == 0) {</span>
+<span class="nc" id="L77">            throw new RuntimeException(&quot;Receipt file is empty.&quot;);</span>
+        }
+<span class="pc bpc" id="L79" title="2 of 4 branches missed.">        if (contentType == null || contentType.isBlank()) {</span>
+<span class="nc" id="L80">            throw new RuntimeException(&quot;Receipt contentType is required.&quot;);</span>
+        }
+
+<span class="fc" id="L83">        boolean isImage = contentType.toLowerCase(Locale.ROOT).startsWith(&quot;image/&quot;);</span>
+<span class="fc" id="L84">        boolean isPdf = contentType.equalsIgnoreCase(&quot;application/pdf&quot;);</span>
+<span class="pc bpc" id="L85" title="1 of 4 branches missed.">        if (!isImage &amp;&amp; !isPdf) {</span>
+<span class="fc" id="L86">            throw new RuntimeException(&quot;Only image/* or application/pdf receipts are allowed.&quot;);</span>
+        }
+
+<span class="fc" id="L89">        Expense expense = expenseRepo.findById(expenseId)</span>
+<span class="pc" id="L90">                .orElseThrow(() -&gt; new RuntimeException(&quot;Expense not found with id: &quot; + expenseId));</span>
+
+<span class="fc" id="L92">        expense.setReceiptData(fileBytes);</span>
+<span class="fc" id="L93">        expense.setReceiptFileName(originalFileName);</span>
+<span class="fc" id="L94">        expense.setReceiptContentType(contentType);</span>
+<span class="fc" id="L95">        expense.setHasReceipt(true);</span>
+
+<span class="fc" id="L97">        expenseRepo.save(expense);</span>
+<span class="fc" id="L98">    }</span>
+
+    @Transactional(readOnly = true)
+    public Map&lt;String, Object&gt; getReceiptInfo(Long expenseId) {
+<span class="fc" id="L102">        Expense expense = expenseRepo.findById(expenseId)</span>
+<span class="pc" id="L103">                .orElseThrow(() -&gt; new RuntimeException(&quot;Expense not found with id: &quot; + expenseId));</span>
+
+<span class="fc" id="L105">        Map&lt;String, Object&gt; info = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L106">        info.put(&quot;expenseId&quot;, expense.getId());</span>
+<span class="fc" id="L107">        info.put(&quot;hasReceipt&quot;, Boolean.TRUE.equals(expense.getHasReceipt()));</span>
+<span class="fc" id="L108">        info.put(&quot;fileName&quot;, expense.getReceiptFileName());</span>
+<span class="fc" id="L109">        info.put(&quot;contentType&quot;, expense.getReceiptContentType());</span>
+<span class="fc" id="L110">        return info;</span>
+    }
+
+    @Transactional(readOnly = true)
+    public Expense getExpenseWithReceipt(Long expenseId) {
+<span class="nc" id="L115">        return expenseRepo.findById(expenseId)</span>
+<span class="nc" id="L116">                .orElseThrow(() -&gt; new RuntimeException(&quot;Expense not found with id: &quot; + expenseId));</span>
+    }
+
+    @Transactional
+    public void deleteReceipt(Long expenseId) {
+<span class="fc" id="L121">        Expense expense = expenseRepo.findById(expenseId)</span>
+<span class="pc" id="L122">                .orElseThrow(() -&gt; new RuntimeException(&quot;Expense not found with id: &quot; + expenseId));</span>
+
+<span class="fc" id="L124">        expense.setReceiptData(null);</span>
+<span class="fc" id="L125">        expense.setReceiptFileName(null);</span>
+<span class="fc" id="L126">        expense.setReceiptContentType(null);</span>
+<span class="fc" id="L127">        expense.setHasReceipt(false);</span>
+
+<span class="fc" id="L129">        expenseRepo.save(expense);</span>
+<span class="fc" id="L130">    }</span>
+
+    // =========================
+    // Sprint 3: Settlement Plan + Balance Sheet + Clear Debts
+    // =========================
+
+    @Transactional(readOnly = true)
+    public List&lt;Map&lt;String, Object&gt;&gt; getSettlementPlanByGroup(Long groupId) {
+<span class="fc" id="L138">        List&lt;Map&lt;String, Object&gt;&gt; directDebts = calculateDirectDebts(groupId);</span>
+
+<span class="fc" id="L140">        Map&lt;String, Double&gt; merged = new LinkedHashMap&lt;&gt;();</span>
+
+<span class="fc bfc" id="L142" title="All 2 branches covered.">        for (Map&lt;String, Object&gt; debt : directDebts) {</span>
+<span class="fc" id="L143">            Long fromUserId = ((Number) debt.get(&quot;fromUserId&quot;)).longValue();</span>
+<span class="fc" id="L144">            Long toUserId = ((Number) debt.get(&quot;toUserId&quot;)).longValue();</span>
+<span class="fc" id="L145">            double amount = round2(((Number) debt.get(&quot;amount&quot;)).doubleValue());</span>
+
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">            if (amount &lt;= 0.009) continue;</span>
+
+<span class="fc" id="L149">            String key = fromUserId + &quot;-&gt;&quot; + toUserId;</span>
+<span class="fc" id="L150">            merged.put(key, round2(merged.getOrDefault(key, 0.0) + amount));</span>
+<span class="fc" id="L151">        }</span>
+
+<span class="fc" id="L153">        List&lt;Map&lt;String, Object&gt;&gt; instructions = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L155" title="All 2 branches covered.">        for (Map.Entry&lt;String, Double&gt; entry : merged.entrySet()) {</span>
+<span class="fc" id="L156">            double amount = round2(entry.getValue());</span>
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">            if (amount &lt;= 0.009) continue;</span>
+
+<span class="fc" id="L159">            String[] parts = entry.getKey().split(&quot;-&gt;&quot;);</span>
+<span class="fc" id="L160">            Long fromUserId = Long.valueOf(parts[0]);</span>
+<span class="fc" id="L161">            Long toUserId = Long.valueOf(parts[1]);</span>
+
+<span class="fc" id="L163">            Map&lt;String, Object&gt; instruction = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L164">            instruction.put(&quot;fromUserId&quot;, fromUserId);</span>
+<span class="fc" id="L165">            instruction.put(&quot;fromName&quot;, getUserDisplayName(fromUserId));</span>
+<span class="fc" id="L166">            instruction.put(&quot;toUserId&quot;, toUserId);</span>
+<span class="fc" id="L167">            instruction.put(&quot;toName&quot;, getUserDisplayName(toUserId));</span>
+<span class="fc" id="L168">            instruction.put(&quot;amount&quot;, amount);</span>
+<span class="fc" id="L169">            instruction.put(&quot;text&quot;, getUserDisplayName(fromUserId) + &quot; pays &quot; + getUserDisplayName(toUserId) + &quot; $&quot; + String.format(&quot;%.2f&quot;, amount));</span>
+<span class="fc" id="L170">            instructions.add(instruction);</span>
+<span class="fc" id="L171">        }</span>
+
+<span class="pc" id="L173">        instructions.sort((a, b) -&gt; Double.compare(</span>
+<span class="nc" id="L174">                ((Number) b.get(&quot;amount&quot;)).doubleValue(),</span>
+<span class="nc" id="L175">                ((Number) a.get(&quot;amount&quot;)).doubleValue()</span>
+        ));
+
+<span class="fc" id="L178">        return instructions;</span>
+    }
+
+    @Transactional(readOnly = true)
+    public Map&lt;String, Object&gt; getBalanceSheetData(Long groupId) {
+<span class="nc" id="L183">        List&lt;Expense&gt; expenses = expenseRepo.findByGroupIdOrderByIdDesc(groupId);</span>
+<span class="nc" id="L184">        Map&lt;Long, Double&gt; balances = calculateGroupBalances(groupId);</span>
+<span class="nc" id="L185">        List&lt;Map&lt;String, Object&gt;&gt; settlementPlan = getSettlementPlanByGroup(groupId);</span>
+
+<span class="nc" id="L187">        List&lt;Map&lt;String, Object&gt;&gt; expenseRows = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        for (Expense e : expenses) {</span>
+<span class="nc" id="L189">            Map&lt;String, Object&gt; row = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L190">            row.put(&quot;expenseId&quot;, e.getId());</span>
+<span class="nc" id="L191">            row.put(&quot;date&quot;, e.getExpenseDate());</span>
+<span class="nc" id="L192">            row.put(&quot;description&quot;, e.getDescription());</span>
+<span class="nc" id="L193">            row.put(&quot;category&quot;, e.getCategory());</span>
+<span class="nc" id="L194">            row.put(&quot;amount&quot;, round2(e.getAmount()));</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">            row.put(&quot;paidById&quot;, e.getPaidBy() != null ? e.getPaidBy().getId() : null);</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">            row.put(&quot;paidByName&quot;, e.getPaidBy() != null ? getUserDisplayName(e.getPaidBy().getId()) : &quot;Unknown&quot;);</span>
+
+<span class="nc" id="L198">            List&lt;ExpenseSplit&gt; splits = splitRepo.findByExpenseId(e.getId());</span>
+<span class="nc" id="L199">            List&lt;Map&lt;String, Object&gt;&gt; splitRows = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">            for (ExpenseSplit s : splits) {</span>
+<span class="nc" id="L201">                Map&lt;String, Object&gt; splitRow = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L202">                splitRow.put(&quot;userId&quot;, s.getUserId());</span>
+<span class="nc" id="L203">                splitRow.put(&quot;name&quot;, getUserDisplayName(s.getUserId()));</span>
+<span class="nc" id="L204">                splitRow.put(&quot;amount&quot;, round2(s.getAmount()));</span>
+<span class="nc" id="L205">                splitRow.put(&quot;percentage&quot;, s.getPercentage());</span>
+<span class="nc" id="L206">                splitRows.add(splitRow);</span>
+<span class="nc" id="L207">            }</span>
+
+<span class="nc" id="L209">            row.put(&quot;splits&quot;, splitRows);</span>
+<span class="nc" id="L210">            expenseRows.add(row);</span>
+<span class="nc" id="L211">        }</span>
+
+<span class="nc" id="L213">        List&lt;Map&lt;String, Object&gt;&gt; balanceRows = balances.entrySet().stream()</span>
+<span class="nc" id="L214">                .map(entry -&gt; {</span>
+<span class="nc" id="L215">                    Map&lt;String, Object&gt; row = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L216">                    row.put(&quot;userId&quot;, entry.getKey());</span>
+<span class="nc" id="L217">                    row.put(&quot;name&quot;, getUserDisplayName(entry.getKey()));</span>
+<span class="nc" id="L218">                    row.put(&quot;netBalance&quot;, round2(entry.getValue()));</span>
+<span class="nc" id="L219">                    return row;</span>
+                })
+<span class="nc" id="L221">                .sorted((a, b) -&gt; Double.compare(</span>
+<span class="nc" id="L222">                        ((Number) b.get(&quot;netBalance&quot;)).doubleValue(),</span>
+<span class="nc" id="L223">                        ((Number) a.get(&quot;netBalance&quot;)).doubleValue()</span>
+                ))
+<span class="nc" id="L225">                .collect(Collectors.toList());</span>
+
+<span class="nc" id="L227">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L228">        result.put(&quot;groupId&quot;, groupId);</span>
+<span class="nc" id="L229">        result.put(&quot;expenses&quot;, expenseRows);</span>
+<span class="nc" id="L230">        result.put(&quot;balances&quot;, balanceRows);</span>
+<span class="nc" id="L231">        result.put(&quot;settlementPlan&quot;, settlementPlan);</span>
+<span class="nc" id="L232">        result.put(&quot;totalExpenses&quot;, round2(expenses.stream().mapToDouble(Expense::getAmount).sum()));</span>
+<span class="nc" id="L233">        return result;</span>
+    }
+
+    @Transactional(readOnly = true)
+    public String exportBalanceSheetCsv(Long groupId) {
+<span class="nc" id="L238">        Map&lt;String, Object&gt; data = getBalanceSheetData(groupId);</span>
+
+<span class="nc" id="L240">        StringBuilder sb = new StringBuilder();</span>
+
+<span class="nc" id="L242">        sb.append(&quot;FAIRSHARE BALANCE SHEET\n&quot;);</span>
+<span class="nc" id="L243">        sb.append(&quot;Group ID,&quot;).append(groupId).append(&quot;\n\n&quot;);</span>
+
+<span class="nc" id="L245">        sb.append(&quot;EXPENSES\n&quot;);</span>
+<span class="nc" id="L246">        sb.append(&quot;Expense ID,Date,Description,Category,Amount,Paid By\n&quot;);</span>
+
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L249">        List&lt;Map&lt;String, Object&gt;&gt; expenses = (List&lt;Map&lt;String, Object&gt;&gt;) data.get(&quot;expenses&quot;);</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">        for (Map&lt;String, Object&gt; e : expenses) {</span>
+<span class="nc" id="L251">            sb.append(csv(e.get(&quot;expenseId&quot;))).append(&quot;,&quot;);</span>
+<span class="nc" id="L252">            sb.append(csv(e.get(&quot;date&quot;))).append(&quot;,&quot;);</span>
+<span class="nc" id="L253">            sb.append(csv(e.get(&quot;description&quot;))).append(&quot;,&quot;);</span>
+<span class="nc" id="L254">            sb.append(csv(e.get(&quot;category&quot;))).append(&quot;,&quot;);</span>
+<span class="nc" id="L255">            sb.append(csv(e.get(&quot;amount&quot;))).append(&quot;,&quot;);</span>
+<span class="nc" id="L256">            sb.append(csv(e.get(&quot;paidByName&quot;))).append(&quot;\n&quot;);</span>
+<span class="nc" id="L257">        }</span>
+
+<span class="nc" id="L259">        sb.append(&quot;\nBALANCES\n&quot;);</span>
+<span class="nc" id="L260">        sb.append(&quot;User ID,Name,Net Balance\n&quot;);</span>
+
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L263">        List&lt;Map&lt;String, Object&gt;&gt; balances = (List&lt;Map&lt;String, Object&gt;&gt;) data.get(&quot;balances&quot;);</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">        for (Map&lt;String, Object&gt; b : balances) {</span>
+<span class="nc" id="L265">            sb.append(csv(b.get(&quot;userId&quot;))).append(&quot;,&quot;);</span>
+<span class="nc" id="L266">            sb.append(csv(b.get(&quot;name&quot;))).append(&quot;,&quot;);</span>
+<span class="nc" id="L267">            sb.append(csv(b.get(&quot;netBalance&quot;))).append(&quot;\n&quot;);</span>
+<span class="nc" id="L268">        }</span>
+
+<span class="nc" id="L270">        sb.append(&quot;\nSETTLEMENT PLAN\n&quot;);</span>
+<span class="nc" id="L271">        sb.append(&quot;From,To,Amount,Instruction\n&quot;);</span>
+
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L274">        List&lt;Map&lt;String, Object&gt;&gt; settlementPlan = (List&lt;Map&lt;String, Object&gt;&gt;) data.get(&quot;settlementPlan&quot;);</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">        for (Map&lt;String, Object&gt; s : settlementPlan) {</span>
+<span class="nc" id="L276">            sb.append(csv(s.get(&quot;fromName&quot;))).append(&quot;,&quot;);</span>
+<span class="nc" id="L277">            sb.append(csv(s.get(&quot;toName&quot;))).append(&quot;,&quot;);</span>
+<span class="nc" id="L278">            sb.append(csv(s.get(&quot;amount&quot;))).append(&quot;,&quot;);</span>
+<span class="nc" id="L279">            sb.append(csv(s.get(&quot;text&quot;))).append(&quot;\n&quot;);</span>
+<span class="nc" id="L280">        }</span>
+
+<span class="nc" id="L282">        return sb.toString();</span>
+    }
+
+    @Transactional
+    public Map&lt;String, Object&gt; clearAllDebtsForGroup(Long groupId) {
+<span class="fc" id="L287">        List&lt;Expense&gt; expenses = expenseRepo.findByGroupIdOrderByIdDesc(groupId);</span>
+
+<span class="fc bfc" id="L289" title="All 2 branches covered.">        for (Expense expense : expenses) {</span>
+<span class="fc" id="L290">            splitRepo.deleteByExpenseId(expense.getId());</span>
+<span class="fc" id="L291">            expenseRepo.deleteById(expense.getId());</span>
+<span class="fc" id="L292">        }</span>
+
+<span class="fc" id="L294">        Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L295">        response.put(&quot;message&quot;, &quot;All debts cleared successfully.&quot;);</span>
+<span class="fc" id="L296">        response.put(&quot;groupId&quot;, groupId);</span>
+<span class="fc" id="L297">        response.put(&quot;clearedExpenses&quot;, expenses.size());</span>
+<span class="fc" id="L298">        response.put(&quot;balances&quot;, new HashMap&lt;Long, Double&gt;());</span>
+<span class="fc" id="L299">        return response;</span>
+    }
+
+    // =========================
+    // Existing code
+    // =========================
+
+    private void mapRequestToEntity(ExpenseRequest req, Expense e) {
+<span class="fc" id="L307">        e.setAmount(req.getAmount());</span>
+<span class="fc" id="L308">        e.setDescription(req.getDescription());</span>
+
+<span class="pc bpc" id="L310" title="1 of 2 branches missed.">        if (req.getPaidBy() == null) {</span>
+<span class="nc" id="L311">            throw new RuntimeException(&quot;paidBy is required.&quot;);</span>
+        }
+
+<span class="fc" id="L314">        User payer = userRepo.findById(req.getPaidBy())</span>
+<span class="pc" id="L315">                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found for id: &quot; + req.getPaidBy()));</span>
+<span class="fc" id="L316">        e.setPaidBy(payer);</span>
+
+<span class="fc" id="L318">        e.setCategory(req.getCategory());</span>
+<span class="fc" id="L319">        e.setNotes(req.getNotes());</span>
+
+<span class="pc bpc" id="L321" title="2 of 4 branches missed.">        if (req.getExpenseDate() != null &amp;&amp; !req.getExpenseDate().isEmpty()) {</span>
+<span class="fc" id="L322">            e.setExpenseDate(LocalDate.parse(req.getExpenseDate()));</span>
+        } else {
+<span class="nc" id="L324">            e.setExpenseDate(LocalDate.now());</span>
+        }
+<span class="fc" id="L326">    }</span>
+
+    private String normalizeSplitType(String splitType) {
+<span class="pc bpc" id="L329" title="2 of 4 branches missed.">        if (splitType == null || splitType.trim().isEmpty()) return &quot;EQUAL&quot;;</span>
+<span class="fc" id="L330">        String st = splitType.trim().toUpperCase(Locale.ROOT);</span>
+<span class="pc bpc" id="L331" title="1 of 4 branches missed.">        if (!st.equals(&quot;EQUAL&quot;) &amp;&amp; !st.equals(&quot;PERCENTAGE&quot;)) return &quot;EQUAL&quot;;</span>
+<span class="fc" id="L332">        return st;</span>
+    }
+
+    private void saveSplits(
+            Expense expense,
+            List&lt;Long&gt; participants,
+            double totalAmount,
+            String splitType,
+            Map&lt;String, Double&gt; percentages
+    ) {
+<span class="pc bpc" id="L342" title="2 of 4 branches missed.">        if (participants == null || participants.isEmpty()) {</span>
+<span class="nc" id="L343">            throw new RuntimeException(&quot;Expense must have at least one participant.&quot;);</span>
+        }
+
+<span class="fc bfc" id="L346" title="All 2 branches covered.">        if (&quot;PERCENTAGE&quot;.equals(splitType)) {</span>
+<span class="pc bpc" id="L347" title="2 of 4 branches missed.">            if (percentages == null || percentages.isEmpty()) {</span>
+<span class="nc" id="L348">                throw new RuntimeException(&quot;Percentages are required for PERCENTAGE split.&quot;);</span>
+            }
+
+<span class="fc" id="L351">            Set&lt;String&gt; pctKeys = percentages.keySet();</span>
+
+<span class="fc bfc" id="L353" title="All 2 branches covered.">            for (Long uid : participants) {</span>
+<span class="pc bpc" id="L354" title="1 of 2 branches missed.">                if (!pctKeys.contains(String.valueOf(uid))) {</span>
+<span class="nc" id="L355">                    throw new RuntimeException(&quot;Missing percentage for participant userId: &quot; + uid);</span>
+                }
+<span class="fc" id="L357">            }</span>
+
+<span class="fc bfc" id="L359" title="All 2 branches covered.">            for (String uidStr : pctKeys) {</span>
+<span class="fc" id="L360">                Long uid = Long.valueOf(uidStr);</span>
+<span class="pc bpc" id="L361" title="1 of 2 branches missed.">                if (!participants.contains(uid)) {</span>
+<span class="nc" id="L362">                    throw new RuntimeException(&quot;Percentages contains userId not in selected participants: &quot; + uid);</span>
+                }
+<span class="fc" id="L364">            }</span>
+
+<span class="fc" id="L366">            double sum = 0.0;</span>
+<span class="fc bfc" id="L367" title="All 2 branches covered.">            for (Map.Entry&lt;String, Double&gt; entry : percentages.entrySet()) {</span>
+<span class="fc" id="L368">                Double val = entry.getValue();</span>
+<span class="pc bpc" id="L369" title="2 of 4 branches missed.">                if (val == null || val &lt; 0) {</span>
+<span class="nc" id="L370">                    throw new RuntimeException(&quot;Invalid percentage value for userId &quot; + entry.getKey());</span>
+                }
+<span class="fc" id="L372">                sum += val;</span>
+<span class="fc" id="L373">            }</span>
+
+<span class="fc bfc" id="L375" title="All 2 branches covered.">            if (Math.abs(sum - 100.0) &gt; 0.0001) {</span>
+<span class="fc" id="L376">                throw new RuntimeException(&quot;Percentages must sum to 100. Current sum: &quot; + sum);</span>
+            }
+
+<span class="fc bfc" id="L379" title="All 2 branches covered.">            for (Long uid : participants) {</span>
+<span class="fc" id="L380">                double pct = percentages.get(String.valueOf(uid));</span>
+<span class="fc" id="L381">                double amount = totalAmount * (pct / 100.0);</span>
+
+<span class="fc" id="L383">                ExpenseSplit es = new ExpenseSplit();</span>
+<span class="fc" id="L384">                es.setExpense(expense);</span>
+<span class="fc" id="L385">                es.setUserId(uid);</span>
+<span class="fc" id="L386">                es.setPercentage(pct);</span>
+<span class="fc" id="L387">                es.setAmount(amount);</span>
+<span class="fc" id="L388">                splitRepo.save(es);</span>
+<span class="fc" id="L389">            }</span>
+
+<span class="fc" id="L391">        } else {</span>
+<span class="fc" id="L392">            double splitAmount = totalAmount / participants.size();</span>
+
+<span class="fc bfc" id="L394" title="All 2 branches covered.">            for (Long uid : participants) {</span>
+<span class="fc" id="L395">                ExpenseSplit es = new ExpenseSplit();</span>
+<span class="fc" id="L396">                es.setExpense(expense);</span>
+<span class="fc" id="L397">                es.setUserId(uid);</span>
+<span class="fc" id="L398">                es.setPercentage(null);</span>
+<span class="fc" id="L399">                es.setAmount(splitAmount);</span>
+<span class="fc" id="L400">                splitRepo.save(es);</span>
+<span class="fc" id="L401">            }</span>
+        }
+<span class="fc" id="L403">    }</span>
+
+    @Transactional(readOnly = true)
+    public Map&lt;String, Object&gt; getExpenseSplitsForEdit(Long expenseId) {
+<span class="nc" id="L407">        Expense expense = expenseRepo.findById(expenseId)</span>
+<span class="nc" id="L408">                .orElseThrow(() -&gt; new RuntimeException(&quot;Expense not found&quot;));</span>
+
+<span class="nc" id="L410">        List&lt;ExpenseSplit&gt; splits = splitRepo.findByExpenseId(expenseId);</span>
+
+<span class="nc bnc" id="L412" title="All 2 branches missed.">        boolean anyPercentage = splits.stream().anyMatch(s -&gt; s.getPercentage() != null);</span>
+<span class="nc bnc" id="L413" title="All 2 branches missed.">        String splitType = anyPercentage ? &quot;PERCENTAGE&quot; : &quot;EQUAL&quot;;</span>
+
+<span class="nc" id="L415">        List&lt;Long&gt; participants = splits.stream()</span>
+<span class="nc" id="L416">                .map(ExpenseSplit::getUserId)</span>
+<span class="nc" id="L417">                .collect(Collectors.toList());</span>
+
+<span class="nc" id="L419">        Map&lt;String, Double&gt; percentages = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L420" title="All 2 branches missed.">        if (anyPercentage) {</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">            for (ExpenseSplit s : splits) {</span>
+<span class="nc bnc" id="L422" title="All 2 branches missed.">                if (s.getPercentage() != null) {</span>
+<span class="nc" id="L423">                    percentages.put(String.valueOf(s.getUserId()), s.getPercentage());</span>
+                }
+<span class="nc" id="L425">            }</span>
+        }
+
+<span class="nc" id="L428">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L429">        result.put(&quot;expenseId&quot;, expense.getId());</span>
+<span class="nc" id="L430">        result.put(&quot;splitType&quot;, splitType);</span>
+<span class="nc" id="L431">        result.put(&quot;participants&quot;, participants);</span>
+<span class="nc" id="L432">        result.put(&quot;percentages&quot;, percentages);</span>
+<span class="nc" id="L433">        return result;</span>
+    }
+
+    @Transactional(readOnly = true)
+    public Map&lt;Long, Double&gt; getUserBalances(Long userId) {
+<span class="nc" id="L438">        List&lt;ExpenseSplit&gt; userSplits = splitRepo.findByUserId(userId);</span>
+<span class="nc" id="L439">        Map&lt;Long, Double&gt; groupBalances = new HashMap&lt;&gt;();</span>
+
+<span class="nc bnc" id="L441" title="All 2 branches missed.">        for (ExpenseSplit split : userSplits) {</span>
+<span class="nc" id="L442">            Expense expense = split.getExpense();</span>
+<span class="nc bnc" id="L443" title="All 2 branches missed.">            if (expense == null) continue;</span>
+
+<span class="nc bnc" id="L445" title="All 2 branches missed.">            Long paidById = expense.getPaidBy() != null ? expense.getPaidBy().getId() : null;</span>
+<span class="nc bnc" id="L446" title="All 2 branches missed.">            if (paidById == null) continue;</span>
+
+<span class="nc bnc" id="L448" title="All 2 branches missed.">            double effect = paidById.equals(userId)</span>
+<span class="nc" id="L449">                    ? (expense.getAmount() - split.getAmount())</span>
+<span class="nc" id="L450">                    : -split.getAmount();</span>
+
+<span class="nc" id="L452">            Long gId = expense.getGroupId();</span>
+<span class="nc" id="L453">            groupBalances.put(gId, groupBalances.getOrDefault(gId, 0.0) + effect);</span>
+<span class="nc" id="L454">        }</span>
+
+<span class="nc" id="L456">        return groupBalances;</span>
+    }
+
+    @Transactional(readOnly = true)
+    public List&lt;Map&lt;String, Object&gt;&gt; getRecentActivity(Long userId) {
+<span class="nc" id="L461">        return splitRepo.findByUserId(userId).stream()</span>
+<span class="nc" id="L462">                .map(split -&gt; {</span>
+<span class="nc" id="L463">                    Expense e = split.getExpense();</span>
+<span class="nc bnc" id="L464" title="All 2 branches missed.">                    if (e == null) return null;</span>
+
+<span class="nc" id="L466">                    User payerUser = e.getPaidBy();</span>
+<span class="nc bnc" id="L467" title="All 2 branches missed.">                    Long paidById = payerUser != null ? payerUser.getId() : null;</span>
+
+                    String payerName;
+<span class="nc bnc" id="L470" title="All 4 branches missed.">                    if (paidById != null &amp;&amp; paidById.equals(userId)) {</span>
+<span class="nc" id="L471">                        payerName = &quot;You&quot;;</span>
+<span class="nc bnc" id="L472" title="All 2 branches missed.">                    } else if (payerUser != null) {</span>
+<span class="nc bnc" id="L473" title="All 4 branches missed.">                        if (payerUser.getName() != null &amp;&amp; !payerUser.getName().isBlank()) {</span>
+<span class="nc" id="L474">                            payerName = payerUser.getName();</span>
+<span class="nc bnc" id="L475" title="All 4 branches missed.">                        } else if (payerUser.getEmail() != null &amp;&amp; !payerUser.getEmail().isBlank()) {</span>
+<span class="nc" id="L476">                            payerName = payerUser.getEmail();</span>
+                        } else {
+<span class="nc" id="L478">                            payerName = &quot;User &quot; + paidById;</span>
+                        }
+                    } else {
+<span class="nc" id="L481">                        payerName = &quot;Unknown User&quot;;</span>
+                    }
+
+<span class="nc" id="L484">                    Map&lt;String, Object&gt; activity = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L485">                    activity.put(&quot;id&quot;, e.getId());</span>
+<span class="nc" id="L486">                    activity.put(&quot;groupId&quot;, e.getGroupId());</span>
+<span class="nc" id="L487">                    activity.put(&quot;desc&quot;, e.getDescription());</span>
+<span class="nc" id="L488">                    activity.put(&quot;amount&quot;, e.getAmount());</span>
+<span class="nc" id="L489">                    activity.put(&quot;category&quot;, e.getCategory());</span>
+<span class="nc" id="L490">                    activity.put(&quot;date&quot;, e.getExpenseDate());</span>
+<span class="nc" id="L491">                    activity.put(&quot;payer&quot;, payerName);</span>
+<span class="nc" id="L492">                    activity.put(&quot;payerId&quot;, paidById);</span>
+<span class="nc" id="L493">                    return activity;</span>
+                })
+<span class="nc" id="L495">                .filter(Objects::nonNull)</span>
+<span class="nc" id="L496">                .sorted((a, b) -&gt; Long.compare(</span>
+<span class="nc" id="L497">                        ((Number) b.get(&quot;id&quot;)).longValue(),</span>
+<span class="nc" id="L498">                        ((Number) a.get(&quot;id&quot;)).longValue()</span>
+                ))
+<span class="nc" id="L500">                .collect(Collectors.toList());</span>
+    }
+
+    // =========================
+    // Internal Helpers for Sprint 3
+    // =========================
+
+    private List&lt;Map&lt;String, Object&gt;&gt; calculateDirectDebts(Long groupId) {
+<span class="fc" id="L508">        List&lt;Expense&gt; expenses = expenseRepo.findByGroupIdOrderByIdDesc(groupId);</span>
+<span class="fc" id="L509">        List&lt;Map&lt;String, Object&gt;&gt; directDebts = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L511" title="All 2 branches covered.">        for (Expense expense : expenses) {</span>
+<span class="pc bpc" id="L512" title="1 of 2 branches missed.">            if (expense == null) continue;</span>
+
+<span class="pc bpc" id="L514" title="1 of 2 branches missed.">            Long payerId = expense.getPaidBy() != null ? expense.getPaidBy().getId() : null;</span>
+<span class="pc bpc" id="L515" title="1 of 2 branches missed.">            if (payerId == null) continue;</span>
+
+<span class="fc" id="L517">            List&lt;ExpenseSplit&gt; splits = splitRepo.findByExpenseId(expense.getId());</span>
+
+<span class="fc bfc" id="L519" title="All 2 branches covered.">            for (ExpenseSplit split : splits) {</span>
+<span class="fc" id="L520">                Long participantId = split.getUserId();</span>
+<span class="pc bpc" id="L521" title="1 of 2 branches missed.">                if (participantId == null) continue;</span>
+
+<span class="fc bfc" id="L523" title="All 2 branches covered.">                if (participantId.equals(payerId)) continue;</span>
+
+<span class="fc" id="L525">                double amount = round2(split.getAmount());</span>
+<span class="pc bpc" id="L526" title="1 of 2 branches missed.">                if (amount &lt;= 0.009) continue;</span>
+
+<span class="fc" id="L528">                Map&lt;String, Object&gt; debt = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L529">                debt.put(&quot;expenseId&quot;, expense.getId());</span>
+<span class="fc" id="L530">                debt.put(&quot;expenseDesc&quot;, expense.getDescription());</span>
+<span class="fc" id="L531">                debt.put(&quot;fromUserId&quot;, participantId);</span>
+<span class="fc" id="L532">                debt.put(&quot;fromName&quot;, getUserDisplayName(participantId));</span>
+<span class="fc" id="L533">                debt.put(&quot;toUserId&quot;, payerId);</span>
+<span class="fc" id="L534">                debt.put(&quot;toName&quot;, getUserDisplayName(payerId));</span>
+<span class="fc" id="L535">                debt.put(&quot;amount&quot;, amount);</span>
+
+<span class="fc" id="L537">                directDebts.add(debt);</span>
+<span class="fc" id="L538">            }</span>
+<span class="fc" id="L539">        }</span>
+
+<span class="fc" id="L541">        return directDebts;</span>
+    }
+
+    private Map&lt;Long, Double&gt; calculateGroupBalances(Long groupId) {
+<span class="nc" id="L545">        List&lt;Map&lt;String, Object&gt;&gt; directDebts = calculateDirectDebts(groupId);</span>
+<span class="nc" id="L546">        Map&lt;Long, Double&gt; balances = new HashMap&lt;&gt;();</span>
+
+<span class="nc bnc" id="L548" title="All 2 branches missed.">        for (Map&lt;String, Object&gt; debt : directDebts) {</span>
+<span class="nc" id="L549">            Long fromUserId = ((Number) debt.get(&quot;fromUserId&quot;)).longValue();</span>
+<span class="nc" id="L550">            Long toUserId = ((Number) debt.get(&quot;toUserId&quot;)).longValue();</span>
+<span class="nc" id="L551">            double amount = round2(((Number) debt.get(&quot;amount&quot;)).doubleValue());</span>
+
+<span class="nc" id="L553">            balances.put(fromUserId, round2(balances.getOrDefault(fromUserId, 0.0) - amount));</span>
+<span class="nc" id="L554">            balances.put(toUserId, round2(balances.getOrDefault(toUserId, 0.0) + amount));</span>
+<span class="nc" id="L555">        }</span>
+
+<span class="nc" id="L557">        return balances;</span>
+    }
+
+    private String getUserDisplayName(Long userId) {
+<span class="pc bpc" id="L561" title="1 of 2 branches missed.">        if (userId == null) return &quot;Unknown User&quot;;</span>
+<span class="fc" id="L562">        return userRepo.findById(userId)</span>
+<span class="fc" id="L563">                .map(user -&gt; {</span>
+<span class="pc bpc" id="L564" title="2 of 4 branches missed.">                    if (user.getName() != null &amp;&amp; !user.getName().isBlank()) return user.getName();</span>
+<span class="nc bnc" id="L565" title="All 4 branches missed.">                    if (user.getEmail() != null &amp;&amp; !user.getEmail().isBlank()) return user.getEmail();</span>
+<span class="nc" id="L566">                    return &quot;User &quot; + userId;</span>
+                })
+<span class="fc" id="L568">                .orElse(&quot;User &quot; + userId);</span>
+    }
+
+    private double round2(double value) {
+<span class="fc" id="L572">        return Math.round(value * 100.0) / 100.0;</span>
+    }
+
+    private String csv(Object value) {
+<span class="nc bnc" id="L576" title="All 2 branches missed.">        String s = value == null ? &quot;&quot; : String.valueOf(value);</span>
+<span class="nc" id="L577">        s = s.replace(&quot;\&quot;&quot;, &quot;\&quot;\&quot;&quot;);</span>
+<span class="nc" id="L578">        return &quot;\&quot;&quot; + s + &quot;\&quot;&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

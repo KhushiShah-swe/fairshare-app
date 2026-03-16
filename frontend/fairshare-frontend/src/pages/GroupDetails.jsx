@@ -14,22 +14,28 @@ export default function GroupDetails() {
   const [groupInfo, setGroupInfo] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ default role is MEMBER, but we will derive correctly from backend
   const [currentUserRole, setCurrentUserRole] = useState("MEMBER");
   const [isEditingName, setIsEditingName] = useState(false);
   const [newName, setNewName] = useState("");
 
-  // ✅ expenseId -> { splitType, participants, percentages }
   const [splitsByExpense, setSplitsByExpense] = useState({});
 
-  // ✅ RECEIPT FEATURE STATES
-  // expenseId -> true/false (does receipt exist)
   const [receiptExistsByExpense, setReceiptExistsByExpense] = useState({});
-  // upload UI state
   const [showReceiptModal, setShowReceiptModal] = useState(false);
-  const [receiptExpenseTarget, setReceiptExpenseTarget] = useState(null); // expense object
+  const [receiptExpenseTarget, setReceiptExpenseTarget] = useState(null);
   const [receiptFile, setReceiptFile] = useState(null);
   const [receiptUploading, setReceiptUploading] = useState(false);
+
+  const [settlementPlan, setSettlementPlan] = useState([]);
+  const [loadingSettlement, setLoadingSettlement] = useState(false);
+
+  const [zelleInfoByUser, setZelleInfoByUser] = useState({});
+  const [zelleFormByUser, setZelleFormByUser] = useState({});
+
+  const [showZelleQrModal, setShowZelleQrModal] = useState(false);
+  const [zelleQrTargetUserId, setZelleQrTargetUserId] = useState(null);
+  const [zelleQrFile, setZelleQrFile] = useState(null);
+  const [zelleQrUploading, setZelleQrUploading] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const currentUserId = String(user?.id || user?._id || "");
@@ -37,45 +43,16 @@ export default function GroupDetails() {
   const normalizeRole = (role) => String(role || "MEMBER").trim().toUpperCase();
   const isAdmin = normalizeRole(currentUserRole) === "ADMIN";
 
-  // ✅ Handles BOTH member shapes:
-  // - m.user.id
-  // - m.userId (if backend sends plain userId)
   const getMemberUserIdStr = (m) => {
     const id = m?.user?.id ?? m?.user?._id ?? m?.userId ?? m?.user_id;
     return id == null ? "" : String(id);
   };
 
-  // ✅ Handles BOTH role shapes:
-  // - m.role
-  // - m.userRole (some backends)
   const getMemberRole = (m) => normalizeRole(m?.role ?? m?.userRole ?? "MEMBER");
-
-  // =========================
-  // RECEIPT API CONTRACT (IMPORTANT)
-  // Backend endpoints this UI expects:
-  //
-  // 1) Upload/Replace receipt:
-  //    POST /api/expenses/{expenseId}/receipt
-  //    Content-Type: multipart/form-data
-  //    FormData field name: "file"
-  //
-  // 2) View/download receipt:
-  //    GET /api/expenses/{expenseId}/receipt
-  //    returns the file as binary (image/pdf)
-  //
-  // 3) Check if receipt exists (optional but recommended):
-  //    GET /api/expenses/{expenseId}/receipt/exists
-  //    returns: { exists: true/false }
-  //
-  // If (3) is NOT implemented, UI will still work:
-  // - "View Receipt" will try GET /receipt and show error if none
-  // - After upload, we mark it as exists locally
-  // =========================
 
   const fetchDetails = useCallback(async () => {
     setLoading(true);
     try {
-      // 1) Members + group info
       const memberRes = await api.get(`/groups/group-members/${groupId}`);
 
       if (Array.isArray(memberRes.data) && memberRes.data.length > 0) {
@@ -85,19 +62,12 @@ export default function GroupDetails() {
         setGroupInfo(g || null);
         setNewName(g?.name || "");
 
-        // ✅ IMPORTANT FIX:
-        // Find the membership record for the current user using robust id extraction
         const memberRecord = memberRes.data.find(
           (m) => getMemberUserIdStr(m) === currentUserId
         );
 
-        // ✅ IMPORTANT FIX:
-        // If role is null/empty in DB for new groups, treat creator as ADMIN
-        // (still shows admin UI even if role wasn't saved properly)
         let role = getMemberRole(memberRecord);
 
-        // If backend didn't save role, infer:
-        // if current user is the first member record AND group exists => likely creator/admin
         if (
           (!memberRecord || !memberRecord?.role) &&
           getMemberUserIdStr(memberRes.data[0]) === currentUserId
@@ -113,44 +83,42 @@ export default function GroupDetails() {
         setCurrentUserRole("MEMBER");
       }
 
-      // 2) Expenses
       const expenseRes = await api.get(`/expenses/group/${groupId}`);
-      const expList = Array.isArray(expenseRes.data) ? expenseRes.data : [];
-      setExpenses(expList);
+      const rawExpenses = Array.isArray(expenseRes.data) ? expenseRes.data : [];
 
-      // 3) ✅ Fetch split info for each expense (percentage/equal participants)
+      const uniqueExpenses = Array.from(
+        new Map(rawExpenses.map((exp) => [String(exp.id), exp])).values()
+      );
+
+      setExpenses(uniqueExpenses);
+
       const splitMap = {};
       await Promise.all(
-        expList.map(async (exp) => {
+        uniqueExpenses.map(async (exp) => {
           if (!exp?.id) return;
           try {
-            // GET /api/expenses/{id}/splits
             const sres = await api.get(`/expenses/${exp.id}/splits`);
             splitMap[exp.id] = sres.data;
           } catch {
-            // fallback handled in calculations
+            // ignore fallback
           }
         })
       );
       setSplitsByExpense(splitMap);
 
-      // 4) ✅ Receipt existence check (optional endpoint)
       const receiptMap = {};
       await Promise.all(
-        expList.map(async (exp) => {
+        uniqueExpenses.map(async (exp) => {
           if (!exp?.id) return;
           try {
-            // Optional endpoint. If not implemented, it will fail and we ignore.
-            const r = await api.get(`/expenses/${exp.id}/receipt/exists`);
-            receiptMap[exp.id] = !!r?.data?.exists;
+            const r = await api.get(`/expenses/${exp.id}/receipt/info`);
+            receiptMap[exp.id] = !!r?.data?.hasReceipt;
           } catch {
-            // ignore; UI will still allow upload + view attempt
+            receiptMap[exp.id] = false;
           }
         })
       );
-      if (Object.keys(receiptMap).length > 0) {
-        setReceiptExistsByExpense((prev) => ({ ...prev, ...receiptMap }));
-      }
+      setReceiptExistsByExpense(receiptMap);
     } catch (err) {
       console.error("Error fetching details:", err);
       toast.error("Failed to load group details.");
@@ -159,11 +127,64 @@ export default function GroupDetails() {
     }
   }, [groupId, currentUserId]);
 
+  const fetchSettlementPlan = async () => {
+    try {
+      setLoadingSettlement(true);
+      const res = await api.get(`/expenses/group/${groupId}/settlement-plan`);
+      setSettlementPlan(res.data || []);
+    } catch (err) {
+      console.error("Settlement error", err);
+      setSettlementPlan([]);
+    } finally {
+      setLoadingSettlement(false);
+    }
+  };
+
+  const fetchZelleInfo = async () => {
+    try {
+      const map = {};
+      const formMap = {};
+
+      await Promise.all(
+        members.map(async (m) => {
+          const uid = getMemberUserIdStr(m);
+          if (!uid) return;
+
+          try {
+            const res = await api.get(`/auth/${uid}/zelle`);
+            map[uid] = res.data;
+            formMap[uid] = {
+              zelleEmail: res.data?.zelleEmail || "",
+              zellePhone: res.data?.zellePhone || "",
+            };
+          } catch {
+            map[uid] = null;
+            formMap[uid] = {
+              zelleEmail: "",
+              zellePhone: "",
+            };
+          }
+        })
+      );
+
+      setZelleInfoByUser(map);
+      setZelleFormByUser(formMap);
+    } catch (err) {
+      console.error("Zelle info error", err);
+    }
+  };
+
   useEffect(() => {
     fetchDetails();
   }, [fetchDetails]);
 
-  // --- SETTINGS: UPDATE GROUP NAME ---
+  useEffect(() => {
+    if (members.length > 0) {
+      fetchSettlementPlan();
+      fetchZelleInfo();
+    }
+  }, [members]);
+
   const handleUpdateName = async () => {
     if (!newName.trim()) {
       toast.error("Name cannot be empty");
@@ -181,7 +202,6 @@ export default function GroupDetails() {
     }
   };
 
-  // --- SETTINGS: DELETE GROUP ---
   const handleDeleteGroup = async () => {
     if (
       window.confirm(
@@ -200,43 +220,140 @@ export default function GroupDetails() {
     }
   };
 
-  // --- HELPERS ---
+  const handleClearDebts = async () => {
+    if (!window.confirm("Mark all debts as settled?")) return;
+
+    try {
+      await api.post(`/expenses/group/${groupId}/clear-debts`);
+      toast.success("All balances cleared.");
+      await fetchDetails();
+      await fetchSettlementPlan();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to clear debts.");
+    }
+  };
+
+  const exportBalanceSheet = async () => {
+    try {
+      const res = await api.get(`/expenses/group/${groupId}/export/csv`, {
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `group_${groupId}_balance_sheet.csv`;
+      link.click();
+      setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+      console.error(err);
+      toast.error("Export failed.");
+    }
+  };
+
+  const handleZelleFieldChange = (userId, field, value) => {
+    setZelleFormByUser((prev) => ({
+      ...prev,
+      [String(userId)]: {
+        ...(prev[String(userId)] || {}),
+        [field]: value,
+      },
+    }));
+  };
+
+  const saveZelleInfo = async (userId) => {
+    const form = zelleFormByUser[String(userId)] || {};
+    try {
+      await api.put(`/auth/${userId}/zelle`, null, {
+        params: {
+          zelleEmail: form.zelleEmail || "",
+          zellePhone: form.zellePhone || "",
+        },
+      });
+
+      toast.success("Zelle info saved.");
+      await fetchZelleInfo();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save Zelle info.");
+    }
+  };
+
+  const openZelleQrModal = (userId) => {
+    setZelleQrTargetUserId(String(userId));
+    setZelleQrFile(null);
+    setShowZelleQrModal(true);
+  };
+
+  const closeZelleQrModal = () => {
+    setShowZelleQrModal(false);
+    setZelleQrTargetUserId(null);
+    setZelleQrFile(null);
+    setZelleQrUploading(false);
+  };
+
+  const uploadZelleQr = async () => {
+    if (!zelleQrTargetUserId) {
+      toast.error("Invalid user selected.");
+      return;
+    }
+
+    if (!zelleQrFile) {
+      toast.error("Please select a Zelle QR image.");
+      return;
+    }
+
+    const type = zelleQrFile.type || "";
+    if (!type.startsWith("image/")) {
+      toast.error("Only image files are allowed for Zelle QR.");
+      return;
+    }
+
+    setZelleQrUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", zelleQrFile);
+
+      await api.post(`/auth/${zelleQrTargetUserId}/zelle/qr`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success("Zelle QR uploaded successfully.");
+      await fetchZelleInfo();
+      closeZelleQrModal();
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.error || "Failed to upload Zelle QR.");
+      setZelleQrUploading(false);
+    }
+  };
+
+  const getDisplayNameByUserId = (userId) => {
+    const uid = String(userId);
+    const found = members.find((m) => getMemberUserIdStr(m) === uid);
+    if (!found) return `User ${uid}`;
+    if (uid === currentUserId) return "You";
+    return found?.user?.name || found?.name || found?.user?.email || `User ${uid}`;
+  };
+
   const getPayerName = (exp) => {
     if (!exp?.paidBy) return "Unknown";
     const payerId = String(exp.paidBy?.id || exp.paidBy);
-
     if (payerId === currentUserId) return "You";
 
     const foundMember = members.find((m) => getMemberUserIdStr(m) === payerId);
-
-    return foundMember ? foundMember?.user?.name || foundMember?.name : `User ${payerId}`;
+    return foundMember
+      ? foundMember?.user?.name || foundMember?.name || foundMember?.user?.email || `User ${payerId}`
+      : `User ${payerId}`;
   };
 
-  const handleDownloadReport = () => {
-    const headers = ["Date", "Description", "Category", "Amount", "Paid By"];
-    const rows = expenses.map((exp) => [
-      new Date(exp.expenseDate || Date.now()).toLocaleDateString(),
-      `"${exp.description || ""}"`,
-      exp.category || "General",
-      Number(exp.amount || 0).toFixed(2),
-      getPayerName(exp),
-    ]);
-    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `${groupInfo?.name || "Group"}_Report.csv`;
-    link.click();
-  };
-
-  // ✅ core fix: how much does member owe for this expense?
   const getOwedAmountForMember = (exp, memberIdStr) => {
     const total = Number(exp?.amount || 0);
     if (!total) return 0;
 
     const splitData = splitsByExpense?.[exp.id];
 
-    // PERCENTAGE
     if (
       splitData?.splitType &&
       String(splitData.splitType).toUpperCase() === "PERCENTAGE" &&
@@ -246,41 +363,99 @@ export default function GroupDetails() {
       return total * (pct / 100);
     }
 
-    // EQUAL among selected participants (only if this member is included)
     if (Array.isArray(splitData?.participants) && splitData.participants.length > 0) {
       const participantIds = splitData.participants.map((x) => String(x));
       if (!participantIds.includes(String(memberIdStr))) return 0;
       return total / splitData.participants.length;
     }
 
-    // fallback: equal among all group members (old behavior)
     return members.length > 0 ? total / members.length : 0;
   };
 
-  // --- CALCULATIONS (FIXED) ---
+  const getSplitSummary = (exp) => {
+    const splitData = splitsByExpense?.[exp.id];
+    if (!splitData) return "Split: All group members";
+
+    const splitTypeLabel =
+      String(splitData.splitType || "EQUAL").toUpperCase() === "PERCENTAGE"
+        ? "Percentage"
+        : "Equal";
+
+    if (
+      String(splitData.splitType || "").toUpperCase() === "PERCENTAGE" &&
+      splitData.percentages
+    ) {
+      const lines = Object.entries(splitData.percentages).map(([uid, pct]) => {
+        return `${getDisplayNameByUserId(uid)} (${Number(pct).toFixed(0)}%)`;
+      });
+      return `Split Type: ${splitTypeLabel} • Split Among: ${lines.join(", ")}`;
+    }
+
+    if (Array.isArray(splitData?.participants) && splitData.participants.length > 0) {
+      const names = splitData.participants.map((uid) => getDisplayNameByUserId(uid));
+      return `Split Type: ${splitTypeLabel} • Split Among: ${names.join(", ")}`;
+    }
+
+    return `Split Type: ${splitTypeLabel}`;
+  };
+
   const totalGroupSpending = expenses.reduce((sum, exp) => sum + Number(exp?.amount || 0), 0);
   const fairShare = members.length > 0 ? totalGroupSpending / members.length : 0;
+
+  const pairwiseDebts = [];
+  expenses.forEach((exp) => {
+    const payerId = String(exp?.paidBy?.id || exp?.paidBy || "");
+    if (!payerId) return;
+
+    const splitData = splitsByExpense?.[exp.id];
+    let participantIds = [];
+
+    if (Array.isArray(splitData?.participants) && splitData.participants.length > 0) {
+      participantIds = splitData.participants.map(String);
+    } else if (splitData?.percentages && Object.keys(splitData.percentages).length > 0) {
+      participantIds = Object.keys(splitData.percentages).map(String);
+    } else {
+      participantIds = members.map((m) => getMemberUserIdStr(m));
+    }
+
+    participantIds.forEach((participantId) => {
+      if (participantId === payerId) return;
+
+      const owedAmount = getOwedAmountForMember(exp, participantId);
+      if (owedAmount > 0) {
+        pairwiseDebts.push({
+          expenseId: exp.id,
+          expenseDesc: exp.description,
+          from: participantId,
+          to: payerId,
+          amount: owedAmount,
+        });
+      }
+    });
+  });
 
   const balances = members
     .map((m) => {
       const memberId = getMemberUserIdStr(m);
-      let netBalance = 0;
 
-      expenses.forEach((exp) => {
-        // debit what member owes
-        netBalance -= getOwedAmountForMember(exp, memberId);
+      let balance = 0;
 
-        // credit payer the full amount
-        const payerId = String(exp?.paidBy?.id || exp?.paidBy || "");
-        if (payerId && payerId === memberId) {
-          netBalance += Number(exp?.amount || 0);
+      pairwiseDebts.forEach((debt) => {
+        if (String(debt.to) === memberId) {
+          balance += Number(debt.amount || 0);
+        }
+        if (String(debt.from) === memberId) {
+          balance -= Number(debt.amount || 0);
         }
       });
 
       return {
-        displayName: memberId === currentUserId ? "You" : m?.user?.name || "Member",
+        displayName:
+          memberId === currentUserId
+            ? "You"
+            : m?.user?.name || m?.name || m?.user?.email || "Member",
         userId: memberId,
-        balance: netBalance,
+        balance,
       };
     })
     .sort((a, b) => b.balance - a.balance);
@@ -295,10 +470,6 @@ export default function GroupDetails() {
   }, []);
 
   const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
-
-  // =========================
-  // RECEIPT ACTIONS
-  // =========================
 
   const openReceiptModal = (expense) => {
     setReceiptExpenseTarget(expense);
@@ -323,7 +494,6 @@ export default function GroupDetails() {
       return;
     }
 
-    // Basic client-side type check
     const type = receiptFile.type || "";
     const isImage = type.startsWith("image/");
     const isPdf = type === "application/pdf";
@@ -364,11 +534,19 @@ export default function GroupDetails() {
 
       const url = URL.createObjectURL(new Blob([blob], { type: contentType }));
       window.open(url, "_blank", "noopener,noreferrer");
-
-      // optional cleanup later (won't break if ignored)
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch (err) {
       toast.error(err.response?.data?.error || err.response?.data || "No receipt found for this expense.");
+    }
+  };
+
+  const viewZelleQr = async (userId) => {
+    try {
+      const baseUrl = api?.defaults?.baseURL || "";
+      window.open(`${baseUrl}/auth/${userId}/zelle/qr`, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error(err);
+      toast.error("Unable to open Zelle QR.");
     }
   };
 
@@ -377,14 +555,13 @@ export default function GroupDetails() {
   return (
     <div className="dashboard-wrapper">
       <div className="dashboard-content">
-        {/* TOP ACTION BAR */}
         <div style={{ paddingBottom: "20px", display: "flex", justifyContent: "space-between" }}>
           <button className="secondary-btn" onClick={() => navigate("/dashboard")}>
             ← Back
           </button>
-          <div style={{ display: "flex", gap: "10px" }}>
-            <button className="secondary-btn" onClick={handleDownloadReport}>
-              📥 Report
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <button className="secondary-btn" onClick={exportBalanceSheet}>
+              📄 Export Balance Sheet
             </button>
             <button className="primary-btn" onClick={() => navigate("/add-expense")}>
               + Expense
@@ -392,7 +569,6 @@ export default function GroupDetails() {
           </div>
         </div>
 
-        {/* HEADER */}
         <div className="panel-header">
           <div style={{ flex: 1 }}>
             {isEditingName && isAdmin ? (
@@ -427,18 +603,15 @@ export default function GroupDetails() {
             )}
 
             <p className="text-muted">
-              Invite Code:{" "}
-              <strong style={{ color: "#2563eb" }}>{groupInfo?.inviteCode || "-"}</strong>
+              Invite Code: <strong style={{ color: "#2563eb" }}>{groupInfo?.inviteCode || "-"}</strong>
             </p>
           </div>
 
-          {/* ✅ Always show role */}
           <span className={`badge-role ${isAdmin ? "admin" : ""}`}>
             {normalizeRole(currentUserRole)}
           </span>
         </div>
 
-        {/* STATS */}
         <div className="group-stats-row">
           <div className="total-spending-card">
             <div className="spending-content">
@@ -478,7 +651,6 @@ export default function GroupDetails() {
         </div>
 
         <div className="main-grid">
-          {/* LEFT */}
           <div className="glass-panel">
             <h3>Expense History</h3>
             <div className="expense-list" style={{ marginTop: "1rem" }}>
@@ -500,7 +672,10 @@ export default function GroupDetails() {
                           Paid by {getPayerName(exp)} • ${Number(exp.amount || 0).toFixed(2)}
                         </p>
 
-                        {/* ✅ Receipt actions */}
+                        <p className="text-muted" style={{ fontSize: "0.92rem", marginTop: "4px" }}>
+                          {getSplitSummary(exp)}
+                        </p>
+
                         <div style={{ display: "flex", gap: "10px", marginTop: "8px", flexWrap: "wrap" }}>
                           <button
                             className="secondary-btn"
@@ -511,14 +686,16 @@ export default function GroupDetails() {
                             🧾 {hasReceipt ? "Replace Receipt" : "Attach Receipt"}
                           </button>
 
-                          <button
-                            className="secondary-btn"
-                            onClick={() => viewReceipt(exp.id)}
-                            style={{ padding: "8px 10px" }}
-                            title="View attached receipt"
-                          >
-                            👁️ View Receipt
-                          </button>
+                          {hasReceipt && (
+                            <button
+                              className="secondary-btn"
+                              onClick={() => viewReceipt(exp.id)}
+                              style={{ padding: "8px 10px" }}
+                              title="View attached receipt"
+                            >
+                              👁️ View Receipt
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -528,7 +705,6 @@ export default function GroupDetails() {
             </div>
           </div>
 
-          {/* RIGHT */}
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             <div className="glass-panel">
               <h3>Balance Summary</h3>
@@ -558,6 +734,170 @@ export default function GroupDetails() {
                     </span>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <div className="glass-panel">
+              <h3>Who Owes Whom</h3>
+              <div style={{ marginTop: "1rem" }}>
+                {pairwiseDebts.length === 0 ? (
+                  <p className="text-muted">No pending settlements.</p>
+                ) : (
+                  pairwiseDebts.map((debt, index) => (
+                    <div
+                      key={`${debt.expenseId}-${debt.from}-${debt.to}-${index}`}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "12px 0",
+                        borderBottom: "1px solid #f1f5f9",
+                      }}
+                    >
+                      <div>
+                        <span>
+                          <strong>{getDisplayNameByUserId(debt.from)}</strong> owes{" "}
+                          <strong>{getDisplayNameByUserId(debt.to)}</strong>
+                        </span>
+                        <div className="text-muted" style={{ fontSize: "0.9rem", marginTop: "2px" }}>
+                          For: {debt.expenseDesc || "Expense"}
+                        </div>
+                      </div>
+                      <span style={{ fontWeight: "700", color: "#ef4444" }}>
+                        ${debt.amount.toFixed(2)}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="glass-panel">
+              <h3>Settlement Plan</h3>
+
+              <div style={{ marginTop: "1rem" }}>
+                {loadingSettlement ? (
+                  <p className="text-muted">Calculating settlements...</p>
+                ) : settlementPlan.length === 0 ? (
+                  <p className="text-muted">Everyone is settled 🎉</p>
+                ) : (
+                  settlementPlan.map((s, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: "10px",
+                        padding: "12px 0",
+                        borderBottom: "1px solid #f1f5f9",
+                      }}
+                    >
+                      <span>
+                        <strong>{s.fromName}</strong> pays <strong>{s.toName}</strong>
+                      </span>
+
+                      <span style={{ fontWeight: "700", color: "#ef4444" }}>
+                        ${Number(s.amount).toFixed(2)}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div style={{ marginTop: "16px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <button className="primary-btn" onClick={handleClearDebts}>
+                  ✔ Clear All Debts
+                </button>
+
+                <button className="secondary-btn" onClick={exportBalanceSheet}>
+                  📄 Export Balance Sheet
+                </button>
+              </div>
+            </div>
+
+            <div className="glass-panel">
+              <h3>Zelle Payment Info</h3>
+              <div style={{ marginTop: "1rem" }}>
+                {members.length === 0 ? (
+                  <p className="text-muted">No members found.</p>
+                ) : (
+                  members.map((m) => {
+                    const uid = getMemberUserIdStr(m);
+                    const displayName = getDisplayNameByUserId(uid);
+                    const zelle = zelleInfoByUser?.[uid];
+                    const form = zelleFormByUser?.[uid] || {
+                      zelleEmail: "",
+                      zellePhone: "",
+                    };
+
+                    return (
+                      <div
+                        key={uid}
+                        style={{
+                          padding: "14px 0",
+                          borderBottom: "1px solid #f1f5f9",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "10px",
+                        }}
+                      >
+                        <div style={{ fontWeight: "700", fontSize: "1rem" }}>{displayName}</div>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                          <input
+                            className="custom-input"
+                            placeholder="Zelle Email"
+                            value={form.zelleEmail}
+                            onChange={(e) =>
+                              handleZelleFieldChange(uid, "zelleEmail", e.target.value)
+                            }
+                          />
+
+                          <input
+                            className="custom-input"
+                            placeholder="Zelle Phone"
+                            value={form.zellePhone}
+                            onChange={(e) =>
+                              handleZelleFieldChange(uid, "zellePhone", e.target.value)
+                            }
+                          />
+                        </div>
+
+                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                          <button
+                            className="secondary-btn"
+                            onClick={() => saveZelleInfo(uid)}
+                          >
+                            💾 Save Zelle Info
+                          </button>
+
+                          {zelle?.hasZelleQr && (
+                            <button
+                              className="secondary-btn"
+                              onClick={() => viewZelleQr(uid)}
+                            >
+                              📱 View Zelle QR
+                            </button>
+                          )}
+
+                          <button
+                            className="secondary-btn"
+                            onClick={() => openZelleQrModal(uid)}
+                          >
+                            {zelle?.hasZelleQr ? "Replace Zelle QR" : "Upload Zelle QR"}
+                          </button>
+                        </div>
+
+                        {(zelle?.zelleEmail || zelle?.zellePhone || zelle?.hasZelleQr) && (
+                          <div className="text-muted" style={{ fontSize: "0.9rem" }}>
+                            {zelle?.zelleEmail && <div>Saved Email: {zelle.zelleEmail}</div>}
+                            {zelle?.zellePhone && <div>Saved Phone: {zelle.zellePhone}</div>}
+                            {zelle?.hasZelleQr && <div>QR uploaded</div>}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
 
@@ -593,7 +933,6 @@ export default function GroupDetails() {
         </div>
       </div>
 
-      {/* ✅ Receipt Upload Modal */}
       {showReceiptModal && (
         <div
           style={{
@@ -635,6 +974,53 @@ export default function GroupDetails() {
               </button>
               <button className="primary-btn" onClick={uploadReceipt} disabled={receiptUploading}>
                 {receiptUploading ? "Uploading..." : "Upload Receipt"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showZelleQrModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            padding: "16px",
+          }}
+          onClick={closeZelleQrModal}
+        >
+          <div
+            className="glass-panel"
+            style={{ width: "100%", maxWidth: "520px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ marginBottom: "8px" }}>Upload Zelle QR</h3>
+            <p className="text-muted" style={{ marginBottom: "14px" }}>
+              Member: <strong>{getDisplayNameByUserId(zelleQrTargetUserId)}</strong>
+            </p>
+
+            <input
+              className="custom-input"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setZelleQrFile(e.target.files?.[0] || null)}
+            />
+
+            <p className="text-muted" style={{ marginTop: "10px" }}>
+              Allowed: image files only.
+            </p>
+
+            <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+              <button className="secondary-btn" onClick={closeZelleQrModal} disabled={zelleQrUploading}>
+                Cancel
+              </button>
+              <button className="primary-btn" onClick={uploadZelleQr} disabled={zelleQrUploading}>
+                {zelleQrUploading ? "Uploading..." : "Upload Zelle QR"}
               </button>
             </div>
           </div>

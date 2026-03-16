@@ -1,0 +1,204 @@
+Project Name,Package Name,Type Name,Method Name,LOC,CC,PC,Line no,IsTest,Main prod class tested,Production classes tested
+java,com.fairshare.config,WebConfig,addCorsMappings,3,1,1,10,0,,
+java,com.fairshare.controller,AuthController,signup,3,1,1,38,0,com.fairshare.service.AuthService,com.fairshare.service.AuthService
+java,com.fairshare.controller,AuthController,login,5,1,2,43,0,com.fairshare.service.AuthService,com.fairshare.service.AuthService
+java,com.fairshare.controller,AuthController,updateZelleInfo,12,1,3,54,0,com.fairshare.model.User,com.fairshare.model.User; com.fairshare.service.AuthService
+java,com.fairshare.controller,AuthController,uploadZelleQr,17,2,2,81,0,com.fairshare.service.AuthService,com.fairshare.service.AuthService
+java,com.fairshare.controller,AuthController,getZelleInfo,12,1,1,116,0,com.fairshare.service.AuthService,com.fairshare.service.AuthService
+java,com.fairshare.controller,AuthController,getZelleQr,18,2,1,133,0,com.fairshare.model.User,com.fairshare.model.User; com.fairshare.service.AuthService
+java,com.fairshare.controller,AuthController,deleteZelleQr,12,1,1,170,0,com.fairshare.service.AuthService,com.fairshare.service.AuthService
+java,com.fairshare.controller,ExpenseController,addExpense,48,13,1,30,0,com.fairshare.payload.ExpenseRequest,com.fairshare.payload.ExpenseRequest; com.fairshare.model.Expense; com.fairshare.service.ExpenseService
+java,com.fairshare.controller,ExpenseController,getExpenseById,9,1,1,101,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService
+java,com.fairshare.controller,ExpenseController,getExpenseSplits,12,1,1,111,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService
+java,com.fairshare.controller,ExpenseController,getExpensesByGroup,9,1,1,124,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService
+java,com.fairshare.controller,ExpenseController,getUserBalances,9,1,1,134,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService
+java,com.fairshare.controller,ExpenseController,getRecentActivity,9,1,1,144,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService
+java,com.fairshare.controller,ExpenseController,editExpense,51,13,2,154,0,com.fairshare.payload.ExpenseRequest,com.fairshare.payload.ExpenseRequest; com.fairshare.service.ExpenseService
+java,com.fairshare.controller,ExpenseController,deleteExpense,12,1,1,223,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService
+java,com.fairshare.controller,ExpenseController,uploadReceipt,17,2,2,236,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService
+java,com.fairshare.controller,ExpenseController,getReceiptInfo,12,1,1,265,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService
+java,com.fairshare.controller,ExpenseController,downloadReceipt,18,2,1,278,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService; com.fairshare.model.Expense
+java,com.fairshare.controller,ExpenseController,deleteReceipt,12,1,1,311,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService
+java,com.fairshare.controller,ExpenseController,getSettlementPlan,9,1,1,328,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService
+java,com.fairshare.controller,ExpenseController,clearAllDebts,9,1,1,342,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService
+java,com.fairshare.controller,ExpenseController,getBalanceSheet,9,1,1,357,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService
+java,com.fairshare.controller,ExpenseController,exportBalanceSheetCsv,10,1,1,371,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService
+java,com.fairshare.controller,GroupController,getGroupMembers,9,1,1,27,0,com.fairshare.service.GroupService,com.fairshare.service.GroupService
+java,com.fairshare.controller,GroupController,getMyGroups,9,1,1,38,0,com.fairshare.service.GroupService,com.fairshare.service.GroupService
+java,com.fairshare.controller,GroupController,createGroup,13,2,3,49,0,com.fairshare.service.GroupService,com.fairshare.service.GroupService
+java,com.fairshare.controller,GroupController,joinGroup,13,1,2,67,0,com.fairshare.service.GroupService,com.fairshare.service.GroupService
+java,com.fairshare.controller,GroupController,updateGroupName,15,2,3,83,0,com.fairshare.service.GroupService,com.fairshare.service.GroupService
+java,com.fairshare.controller,GroupController,leaveGroup,12,1,2,101,0,com.fairshare.service.GroupService,com.fairshare.service.GroupService
+java,com.fairshare.controller,GroupController,deleteGroup,12,1,2,113,0,com.fairshare.service.GroupService,com.fairshare.service.GroupService
+java,com.fairshare,FairShareApplication,main,3,1,1,8,0,,
+java,com.fairshare.model,Expense,Expense,2,1,0,74,0,,
+java,com.fairshare.model,Expense,getId,3,1,0,77,0,,
+java,com.fairshare.model,Expense,setId,3,1,1,78,0,,
+java,com.fairshare.model,Expense,getDescription,3,1,0,80,0,,
+java,com.fairshare.model,Expense,setDescription,3,1,1,81,0,,
+java,com.fairshare.model,Expense,getAmount,3,1,0,83,0,,
+java,com.fairshare.model,Expense,setAmount,3,1,1,84,0,,
+java,com.fairshare.model,Expense,getPaidBy,3,1,0,87,0,,
+java,com.fairshare.model,Expense,setPaidBy,3,1,1,88,0,,
+java,com.fairshare.model,Expense,getGroupId,3,1,0,90,0,,
+java,com.fairshare.model,Expense,setGroupId,3,1,1,91,0,,
+java,com.fairshare.model,Expense,getCategory,3,1,0,93,0,,
+java,com.fairshare.model,Expense,setCategory,3,1,1,94,0,,
+java,com.fairshare.model,Expense,getExpenseDate,3,1,0,96,0,,
+java,com.fairshare.model,Expense,setExpenseDate,3,1,1,97,0,,
+java,com.fairshare.model,Expense,getNotes,3,1,0,99,0,,
+java,com.fairshare.model,Expense,setNotes,3,1,1,100,0,,
+java,com.fairshare.model,Expense,getCreatedAt,3,1,0,102,0,,
+java,com.fairshare.model,Expense,setCreatedAt,3,1,1,103,0,,
+java,com.fairshare.model,Expense,getReceiptData,3,1,0,109,0,,
+java,com.fairshare.model,Expense,setReceiptData,3,1,1,110,0,,
+java,com.fairshare.model,Expense,getReceiptFileName,3,1,0,112,0,,
+java,com.fairshare.model,Expense,setReceiptFileName,3,1,1,113,0,,
+java,com.fairshare.model,Expense,getReceiptContentType,3,1,0,115,0,,
+java,com.fairshare.model,Expense,setReceiptContentType,3,1,1,116,0,,
+java,com.fairshare.model,Expense,getHasReceipt,3,1,0,118,0,,
+java,com.fairshare.model,Expense,setHasReceipt,3,1,1,119,0,,
+java,com.fairshare.model,ExpenseSplit,getId,3,1,0,28,0,,
+java,com.fairshare.model,ExpenseSplit,getExpense,3,1,0,29,0,,
+java,com.fairshare.model,ExpenseSplit,getUserId,3,1,0,30,0,,
+java,com.fairshare.model,ExpenseSplit,getAmount,3,1,0,31,0,,
+java,com.fairshare.model,ExpenseSplit,getPercentage,3,1,0,32,0,,
+java,com.fairshare.model,ExpenseSplit,setId,3,1,1,35,0,,
+java,com.fairshare.model,ExpenseSplit,setExpense,3,1,1,36,0,,
+java,com.fairshare.model,ExpenseSplit,setUserId,3,1,1,37,0,,
+java,com.fairshare.model,ExpenseSplit,setAmount,3,1,1,38,0,,
+java,com.fairshare.model,ExpenseSplit,setPercentage,3,1,1,39,0,,
+java,com.fairshare.model,Group,Group,2,1,0,29,0,,
+java,com.fairshare.model,Group,Group,5,1,3,31,0,,
+java,com.fairshare.model,Group,getId,3,1,0,38,0,,
+java,com.fairshare.model,Group,setId,3,1,1,39,0,,
+java,com.fairshare.model,Group,getName,3,1,0,41,0,,
+java,com.fairshare.model,Group,setName,3,1,1,42,0,,
+java,com.fairshare.model,Group,getType,3,1,0,44,0,,
+java,com.fairshare.model,Group,setType,3,1,1,45,0,,
+java,com.fairshare.model,Group,getInviteCode,3,1,0,47,0,,
+java,com.fairshare.model,Group,setInviteCode,3,1,1,48,0,,
+java,com.fairshare.model,Group,getMembers,3,1,0,50,0,,
+java,com.fairshare.model,Group,setMembers,3,1,1,51,0,,
+java,com.fairshare.model,GroupMember,GroupMember,2,1,0,28,0,,
+java,com.fairshare.model,GroupMember,GroupMember,5,1,3,30,0,,
+java,com.fairshare.model,GroupMember,getId,3,1,0,37,0,,
+java,com.fairshare.model,GroupMember,setId,3,1,1,38,0,,
+java,com.fairshare.model,GroupMember,getUser,3,1,0,40,0,,
+java,com.fairshare.model,GroupMember,setUser,3,1,1,41,0,,
+java,com.fairshare.model,GroupMember,getGroup,3,1,0,43,0,,
+java,com.fairshare.model,GroupMember,setGroup,3,1,1,44,0,,
+java,com.fairshare.model,GroupMember,getRole,3,1,0,46,0,,
+java,com.fairshare.model,GroupMember,setRole,3,1,1,47,0,,
+java,com.fairshare.model,User,getId,3,1,0,34,0,,
+java,com.fairshare.model,User,setId,3,1,1,38,0,,
+java,com.fairshare.model,User,getName,3,1,0,42,0,,
+java,com.fairshare.model,User,setName,3,1,1,46,0,,
+java,com.fairshare.model,User,getEmail,3,1,0,50,0,,
+java,com.fairshare.model,User,setEmail,3,1,1,54,0,,
+java,com.fairshare.model,User,getPassword,3,1,0,58,0,,
+java,com.fairshare.model,User,setPassword,3,1,1,62,0,,
+java,com.fairshare.model,User,getZelleEmail,3,1,0,69,0,,
+java,com.fairshare.model,User,setZelleEmail,3,1,1,73,0,,
+java,com.fairshare.model,User,getZellePhone,3,1,0,77,0,,
+java,com.fairshare.model,User,setZellePhone,3,1,1,81,0,,
+java,com.fairshare.model,User,getZelleQrData,3,1,0,85,0,,
+java,com.fairshare.model,User,setZelleQrData,3,1,1,89,0,,
+java,com.fairshare.model,User,getZelleQrFileName,3,1,0,93,0,,
+java,com.fairshare.model,User,setZelleQrFileName,3,1,1,97,0,,
+java,com.fairshare.model,User,getZelleQrContentType,3,1,0,101,0,,
+java,com.fairshare.model,User,setZelleQrContentType,3,1,1,105,0,,
+java,com.fairshare.model,User,getHasZelleQr,3,1,0,109,0,,
+java,com.fairshare.model,User,setHasZelleQr,3,1,1,113,0,,
+java,com.fairshare.payload,ExpenseRequest,getDescription,3,1,0,70,0,,
+java,com.fairshare.payload,ExpenseRequest,getAmount,3,1,0,71,0,,
+java,com.fairshare.payload,ExpenseRequest,getPaidBy,3,1,0,72,0,,
+java,com.fairshare.payload,ExpenseRequest,getGroupId,3,1,0,73,0,,
+java,com.fairshare.payload,ExpenseRequest,getParticipants,3,1,0,74,0,,
+java,com.fairshare.payload,ExpenseRequest,getCategory,3,1,0,75,0,,
+java,com.fairshare.payload,ExpenseRequest,getExpenseDate,3,1,0,76,0,,
+java,com.fairshare.payload,ExpenseRequest,getNotes,3,1,0,77,0,,
+java,com.fairshare.payload,ExpenseRequest,getPaidByUserName,3,1,0,78,0,,
+java,com.fairshare.payload,ExpenseRequest,getSplitType,3,1,0,80,0,,
+java,com.fairshare.payload,ExpenseRequest,getPercentages,3,1,0,81,0,,
+java,com.fairshare.payload,ExpenseRequest,setDescription,3,1,1,84,0,,
+java,com.fairshare.payload,ExpenseRequest,setAmount,3,1,1,85,0,,
+java,com.fairshare.payload,ExpenseRequest,setPaidBy,3,1,1,86,0,,
+java,com.fairshare.payload,ExpenseRequest,setGroupId,3,1,1,87,0,,
+java,com.fairshare.payload,ExpenseRequest,setParticipants,3,1,1,88,0,,
+java,com.fairshare.payload,ExpenseRequest,setCategory,3,1,1,89,0,,
+java,com.fairshare.payload,ExpenseRequest,setExpenseDate,3,1,1,90,0,,
+java,com.fairshare.payload,ExpenseRequest,setNotes,3,1,1,91,0,,
+java,com.fairshare.payload,ExpenseRequest,setPaidByUserName,3,1,1,92,0,,
+java,com.fairshare.payload,ExpenseRequest,setSplitType,3,1,1,94,0,,
+java,com.fairshare.payload,ExpenseRequest,setPercentages,3,1,1,95,0,,
+java,com.fairshare.payload,LoginRequest,getEmail,3,1,0,8,0,,
+java,com.fairshare.payload,LoginRequest,getPassword,3,1,0,9,0,,
+java,com.fairshare.payload,LoginRequest,setEmail,3,1,1,12,0,,
+java,com.fairshare.payload,LoginRequest,setPassword,3,1,1,13,0,,
+java,com.fairshare.payload,SignupRequest,getName,3,1,0,9,0,,
+java,com.fairshare.payload,SignupRequest,getEmail,3,1,0,13,0,,
+java,com.fairshare.payload,SignupRequest,getPassword,3,1,0,17,0,,
+java,com.fairshare.payload,SignupRequest,setName,3,1,1,22,0,,
+java,com.fairshare.payload,SignupRequest,setEmail,3,1,1,26,0,,
+java,com.fairshare.payload,SignupRequest,setPassword,3,1,1,30,0,,
+java,com.fairshare.repository,ExpenseRepository,findByGroupId,0,1,1,13,0,,
+java,com.fairshare.repository,ExpenseRepository,findByGroupIdOrderByIdDesc,0,1,1,18,0,,
+java,com.fairshare.repository,ExpenseRepository,findByPaidBy_Id,0,1,1,24,0,,
+java,com.fairshare.repository,ExpenseRepository,deleteByGroupId,0,1,1,29,0,,
+java,com.fairshare.repository,ExpenseSplitRepository,findByExpense,0,1,1,14,0,,
+java,com.fairshare.repository,ExpenseSplitRepository,findByUserId,0,1,1,19,0,,
+java,com.fairshare.repository,ExpenseSplitRepository,findByExpenseId,0,1,1,25,0,,
+java,com.fairshare.repository,ExpenseSplitRepository,deleteByExpenseId,0,1,1,30,0,,
+java,com.fairshare.repository,GroupMemberRepository,findByUserId,0,1,1,18,0,,
+java,com.fairshare.repository,GroupMemberRepository,findByGroupId,0,1,1,23,0,,
+java,com.fairshare.repository,GroupMemberRepository,existsByUserIdAndGroupId,0,1,2,28,0,,
+java,com.fairshare.repository,GroupMemberRepository,findByUserIdAndGroupId,0,1,2,34,0,,
+java,com.fairshare.repository,GroupMemberRepository,deleteByGroupId,0,1,1,40,0,,
+java,com.fairshare.repository,GroupMemberRepository,findByUser,0,1,1,50,0,,
+java,com.fairshare.repository,GroupRepository,findByInviteCode,0,1,1,11,0,,
+java,com.fairshare.repository,GroupRepository,findByInviteCodeIgnoreCase,0,1,1,17,0,,
+java,com.fairshare.repository,UserRepository,findByEmailAndPassword,0,1,2,8,0,,
+java,com.fairshare.service,AuthService,signup,7,1,1,22,0,com.fairshare.payload.SignupRequest,com.fairshare.payload.SignupRequest; com.fairshare.model.User
+java,com.fairshare.service,AuthService,login,3,1,1,30,0,com.fairshare.payload.LoginRequest,com.fairshare.payload.LoginRequest; com.fairshare.repository.UserRepository
+java,com.fairshare.service,AuthService,getUserById,3,1,1,39,0,,
+java,com.fairshare.service,AuthService,updateZelleInfo,6,1,3,45,0,com.fairshare.model.User,com.fairshare.model.User
+java,com.fairshare.service,AuthService,uploadZelleQr,18,4,4,56,0,com.fairshare.model.User,com.fairshare.model.User
+java,com.fairshare.service,AuthService,deleteZelleQr,8,1,1,82,0,com.fairshare.model.User,com.fairshare.model.User
+java,com.fairshare.service,AuthService,getZelleInfo,13,1,1,95,0,com.fairshare.model.User,com.fairshare.model.User
+java,com.fairshare.service,AuthService,getUserWithZelleQr,3,1,1,113,0,,
+java,com.fairshare.service,BalanceService,getBalances,18,5,1,22,0,com.fairshare.service.BalanceService,com.fairshare.service.BalanceService; com.fairshare.model.Expense; com.fairshare.model.ExpenseSplit; com.fairshare.repository.ExpenseRepository; com.fairshare.repository.ExpenseSplitRepository
+java,com.fairshare.service,BalanceService,extractUserId,13,5,1,49,0,com.fairshare.model.User,com.fairshare.model.User
+java,com.fairshare.service,ExpenseService,getExpenseById,3,1,1,26,0,,
+java,com.fairshare.service,ExpenseService,getExpensesByGroupId,3,1,1,31,0,com.fairshare.repository.ExpenseRepository,com.fairshare.repository.ExpenseRepository
+java,com.fairshare.service,ExpenseService,addExpense,9,1,1,35,0,com.fairshare.payload.ExpenseRequest,com.fairshare.payload.ExpenseRequest; com.fairshare.model.Expense; com.fairshare.service.ExpenseService
+java,com.fairshare.service,ExpenseService,editExpense,9,1,2,49,0,com.fairshare.payload.ExpenseRequest,com.fairshare.payload.ExpenseRequest; com.fairshare.model.Expense; com.fairshare.service.ExpenseService; com.fairshare.repository.ExpenseSplitRepository
+java,com.fairshare.service,ExpenseService,deleteExpense,4,1,1,64,0,com.fairshare.repository.ExpenseSplitRepository,com.fairshare.repository.ExpenseSplitRepository
+java,com.fairshare.service,ExpenseService,uploadReceipt,19,4,4,74,0,com.fairshare.model.Expense,com.fairshare.model.Expense
+java,com.fairshare.service,ExpenseService,getReceiptInfo,9,1,1,100,0,com.fairshare.model.Expense,com.fairshare.model.Expense
+java,com.fairshare.service,ExpenseService,getExpenseWithReceipt,3,1,1,113,0,,
+java,com.fairshare.service,ExpenseService,deleteReceipt,8,1,1,119,0,com.fairshare.model.Expense,com.fairshare.model.Expense
+java,com.fairshare.service,ExpenseService,getSettlementPlanByGroup,30,5,1,136,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService
+java,com.fairshare.service,ExpenseService,getBalanceSheetData,43,3,1,181,0,com.fairshare.repository.ExpenseSplitRepository,com.fairshare.repository.ExpenseSplitRepository; com.fairshare.model.Expense; com.fairshare.model.ExpenseSplit; com.fairshare.service.ExpenseService; com.fairshare.repository.ExpenseRepository; com.fairshare.model.User
+java,com.fairshare.service,ExpenseService,exportBalanceSheetCsv,35,4,1,236,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService
+java,com.fairshare.service,ExpenseService,clearAllDebtsForGroup,13,2,1,285,0,com.fairshare.repository.ExpenseSplitRepository,com.fairshare.repository.ExpenseSplitRepository; com.fairshare.model.Expense; com.fairshare.repository.ExpenseRepository
+java,com.fairshare.service,ExpenseService,mapRequestToEntity,17,3,2,306,0,com.fairshare.model.Expense,com.fairshare.model.Expense; com.fairshare.payload.ExpenseRequest
+java,com.fairshare.service,ExpenseService,normalizeSplitType,6,3,1,328,0,,
+java,com.fairshare.service,ExpenseService,saveSplits,54,13,5,335,0,com.fairshare.model.ExpenseSplit,com.fairshare.model.ExpenseSplit
+java,com.fairshare.service,ExpenseService,getExpenseSplitsForEdit,21,4,1,405,0,com.fairshare.repository.ExpenseSplitRepository,com.fairshare.repository.ExpenseSplitRepository; com.fairshare.model.ExpenseSplit; com.fairshare.model.Expense
+java,com.fairshare.service,ExpenseService,getUserBalances,14,4,1,436,0,com.fairshare.model.Expense,com.fairshare.model.Expense; com.fairshare.model.ExpenseSplit; com.fairshare.repository.ExpenseSplitRepository; com.fairshare.model.User
+java,com.fairshare.service,ExpenseService,getRecentActivity,37,6,1,459,0,com.fairshare.model.Expense,com.fairshare.model.Expense; com.fairshare.repository.ExpenseSplitRepository; com.fairshare.model.ExpenseSplit; com.fairshare.model.User
+java,com.fairshare.service,ExpenseService,calculateDirectDebts,27,8,1,507,0,com.fairshare.repository.ExpenseSplitRepository,com.fairshare.repository.ExpenseSplitRepository; com.fairshare.model.ExpenseSplit; com.fairshare.model.Expense; com.fairshare.service.ExpenseService; com.fairshare.repository.ExpenseRepository; com.fairshare.model.User
+java,com.fairshare.service,ExpenseService,calculateGroupBalances,12,2,1,544,0,com.fairshare.service.ExpenseService,com.fairshare.service.ExpenseService
+java,com.fairshare.service,ExpenseService,getUserDisplayName,9,4,1,560,0,,
+java,com.fairshare.service,ExpenseService,round2,3,1,1,571,0,,
+java,com.fairshare.service,ExpenseService,csv,5,1,1,575,0,,
+java,com.fairshare.service,GroupService,getGroupMembers,3,1,1,27,0,com.fairshare.repository.GroupMemberRepository,com.fairshare.repository.GroupMemberRepository
+java,com.fairshare.service,GroupService,getUserGroups,3,1,1,32,0,com.fairshare.repository.GroupMemberRepository,com.fairshare.repository.GroupMemberRepository
+java,com.fairshare.service,GroupService,createGroup,13,1,3,39,0,com.fairshare.model.Group,com.fairshare.model.Group; com.fairshare.model.GroupMember; com.fairshare.service.GroupService
+java,com.fairshare.service,GroupService,joinGroup,13,2,2,57,0,com.fairshare.service.GroupService,com.fairshare.service.GroupService; com.fairshare.model.Group; com.fairshare.model.GroupMember; com.fairshare.repository.GroupRepository; com.fairshare.model.User
+java,com.fairshare.service,GroupService,updateGroupName,12,3,3,79,0,com.fairshare.service.GroupService,com.fairshare.service.GroupService; com.fairshare.model.Group; com.fairshare.model.GroupMember
+java,com.fairshare.service,GroupService,leaveGroup,7,2,2,100,0,com.fairshare.service.GroupService,com.fairshare.service.GroupService
+java,com.fairshare.service,GroupService,deleteGroup,12,3,2,110,0,com.fairshare.service.GroupService,com.fairshare.service.GroupService; com.fairshare.repository.GroupMemberRepository; com.fairshare.model.GroupMember
+java,com.fairshare.service,GroupService,findMembership,3,1,2,131,0,com.fairshare.repository.GroupMemberRepository,com.fairshare.repository.GroupMemberRepository; com.fairshare.model.GroupMember; com.fairshare.model.User
+java,com.fairshare.service,GroupService,generateInviteCode,3,1,0,138,0,,

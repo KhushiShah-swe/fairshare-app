@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -14,10 +13,22 @@ export default defineConfig({
       }
     }
   },
-  // FIX: The test object MUST be inside the defineConfig object
+
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: './src/setupTests.js', 
+    setupFiles: './src/setupTests.js',
+
+reporters: ['default', 'html'],
+    outputFile: {
+      html: './vitest-report.html',
+
+    
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+      reportsDirectory: './coverage'
+    }
+    }
   }
 })

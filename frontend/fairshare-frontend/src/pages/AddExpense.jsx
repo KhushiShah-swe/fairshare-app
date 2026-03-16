@@ -9,20 +9,17 @@ export default function AddExpense() {
   const [groupId, setGroupId] = useState("");
   const [groups, setGroups] = useState([]);
 
-  // Sprint 1 fields
   const [category, setCategory] = useState("General");
   const [expenseDate, setExpenseDate] = useState(
     new Date().toISOString().split("T")[0]
   );
   const [notes, setNotes] = useState("");
 
-  // Sprint 2 fields
-  const [splitType, setSplitType] = useState("EQUAL"); // EQUAL | PERCENTAGE
-  const [members, setMembers] = useState([]); // group members: [{ user: {id, name...}}]
-  const [selectedMemberIds, setSelectedMemberIds] = useState([]); // subset selection
-  const [percentages, setPercentages] = useState({}); // { [userId]: number }
+  const [splitType, setSplitType] = useState("EQUAL");
+  const [members, setMembers] = useState([]);
+  const [selectedMemberIds, setSelectedMemberIds] = useState([]);
+  const [percentages, setPercentages] = useState({});
 
-  // ✅ Sprint 3: Receipt upload (image/pdf)
   const [receiptFile, setReceiptFile] = useState(null);
 
   const [loading, setLoading] = useState(false);
@@ -42,10 +39,16 @@ export default function AddExpense() {
     "Health",
   ];
 
-  // helper: percent sum for UI
   const percentageSum = useMemo(() => {
     return Object.values(percentages).reduce((acc, v) => acc + (Number(v) || 0), 0);
   }, [percentages]);
+
+  const perHeadAmount = useMemo(() => {
+    const total = Number(amount || 0);
+    if (!selectedMemberIds.length || !total) return 0;
+    if (splitType !== "EQUAL") return 0;
+    return total / selectedMemberIds.length;
+  }, [amount, selectedMemberIds, splitType]);
 
   useEffect(() => {
     if (!userId) {
@@ -70,7 +73,6 @@ export default function AddExpense() {
     fetchGroups();
   }, [userId, navigate, groupId]);
 
-  // When group changes, fetch members and default-select all
   useEffect(() => {
     if (!groupId) return;
 
@@ -82,7 +84,6 @@ export default function AddExpense() {
         const allIds = (memberRes.data || []).map((m) => m.user.id);
         setSelectedMemberIds(allIds);
 
-        // Initialize percentages evenly (only matters if user switches to PERCENTAGE)
         const evenPct = allIds.length > 0 ? 100 / allIds.length : 0;
         const pctMap = {};
         allIds.forEach((id) => (pctMap[id] = Number(evenPct.toFixed(2))));
@@ -103,14 +104,11 @@ export default function AddExpense() {
       const exists = prev.includes(memberId);
       const next = exists ? prev.filter((id) => id !== memberId) : [...prev, memberId];
 
-      // Keep percentages map in sync
       setPercentages((pPrev) => {
         const pNext = { ...pPrev };
         if (!exists) {
-          // add default 0 for newly selected member
           pNext[memberId] = pNext[memberId] ?? 0;
         } else {
-          // remove percentage for unselected member
           delete pNext[memberId];
         }
         return pNext;
@@ -127,14 +125,12 @@ export default function AddExpense() {
     }));
   };
 
-  // ✅ Receipt validation (optional file)
   const validateReceipt = () => {
-    if (!receiptFile) return ""; // optional
+    if (!receiptFile) return "";
     const type = receiptFile.type || "";
     const isImage = type.startsWith("image/");
     const isPdf = type === "application/pdf";
     if (!isImage && !isPdf) return "Receipt must be an image or a PDF.";
-    // optional size limit (example 10MB)
     const maxBytes = 10 * 1024 * 1024;
     if (receiptFile.size > maxBytes) return "Receipt file is too large (max 10MB).";
     return "";
@@ -145,14 +141,14 @@ export default function AddExpense() {
     if (!desc || desc.trim().length === 0) return "Please enter a title.";
     if (!amount || Number(amount) <= 0) return "Amount must be greater than zero.";
     if (!expenseDate) return "Please select a date.";
-    if (!selectedMemberIds || selectedMemberIds.length === 0)
+    if (!selectedMemberIds || selectedMemberIds.length === 0) {
       return "Please select at least one participant.";
+    }
 
     const receiptErr = validateReceipt();
     if (receiptErr) return receiptErr;
 
     if (splitType === "PERCENTAGE") {
-      // all selected should have a number
       for (const uid of selectedMemberIds) {
         const val = percentages[uid];
         if (val === "" || val === undefined || val === null || isNaN(Number(val))) {
@@ -177,6 +173,8 @@ export default function AddExpense() {
   const handleAddExpense = async (e) => {
     e.preventDefault();
 
+    if (loading) return;
+
     const validationError = validate();
     if (validationError) {
       setError(validationError);
@@ -192,15 +190,14 @@ export default function AddExpense() {
         description: desc,
         groupId: parseInt(groupId),
         paidBy: userId,
-        participants: selectedMemberIds, // Sprint 2: subset supported
+        participants: selectedMemberIds,
         category,
         expenseDate,
         notes: notes.trim(),
-        splitType, // "EQUAL" | "PERCENTAGE"
+        splitType,
       };
 
       if (splitType === "PERCENTAGE") {
-        // Backend expects Map<String, Double> (JSON keys are strings)
         const pctPayload = {};
         selectedMemberIds.forEach((uid) => {
           pctPayload[String(uid)] = Number(percentages[uid] || 0);
@@ -208,13 +205,8 @@ export default function AddExpense() {
         payload.percentages = pctPayload;
       }
 
-      // ✅ Add expense first (existing endpoint)
       const addRes = await api.post("/expenses/add", payload);
 
-      // ✅ Then upload receipt (optional) to:
-      // POST /api/expenses/{expenseId}/receipt (multipart/form-data, field "file")
-      // IMPORTANT: backend must return expenseId OR something like { expenseId: X }.
-      // We try common shapes safely:
       const maybeExpenseId =
         addRes?.data?.expenseId ??
         addRes?.data?.id ??
@@ -223,8 +215,6 @@ export default function AddExpense() {
 
       if (receiptFile) {
         if (!maybeExpenseId) {
-          // If your backend only returns {message: "..."} then we can't attach.
-          // You must update backend to return expenseId.
           throw new Error(
             "Receipt upload needs expenseId from /expenses/add response. Update backend to return it."
           );
@@ -253,257 +243,242 @@ export default function AddExpense() {
   };
 
   return (
-    <div className="dashboard-wrapper">
-      <div
-        className="auth-card animate-fade-in"
-        style={{ maxWidth: "650px", margin: "2rem auto" }}
-      >
-        <div className="auth-header">
-          <h1>Add New Expense</h1>
-          <p>
-            Choose who participates and how the expense is split (Equal or Percentage).
-          </p>
-        </div>
-
-        <form onSubmit={handleAddExpense} className="auth-form">
-          {error && <div className="error-message">⚠️ {error}</div>}
-
-          {/* Title */}
-          <div className="input-group">
-            <label>Title</label>
-            <input
-              placeholder="e.g. Pizza Night"
-              value={desc}
-              onChange={(e) => setDesc(e.target.value)}
-              required
-            />
+    <div className="add-expense-page">
+      <div className="expense-shell">
+        <div className="expense-card">
+          <div className="expense-header">
+            <div className="expense-badge">FairShare • New Expense</div>
+            <h1>Add New Expense</h1>
+            <p>
+              Choose who participates and how the expense is split between selected
+              members.
+            </p>
           </div>
 
-          <div className="row" style={{ display: "flex", gap: "15px" }}>
-            {/* Amount */}
-            <div className="input-group" style={{ flex: 1 }}>
-              <label>Total Amount ($)</label>
-              <input
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-              />
-            </div>
+          <form onSubmit={handleAddExpense} className="expense-form">
+            {error && <div className="error-message">⚠️ {error}</div>}
 
-            {/* Date */}
-            <div className="input-group" style={{ flex: 1 }}>
-              <label>Date</label>
-              <input
-                type="date"
-                value={expenseDate}
-                onChange={(e) => setExpenseDate(e.target.value)}
-                required
-              />
-            </div>
-          </div>
+            <div className="form-section">
+              <div className="form-section-title">💸 Expense Details</div>
 
-          <div className="row" style={{ display: "flex", gap: "15px" }}>
-            {/* Group Selection */}
-            <div className="input-group" style={{ flex: 1 }}>
-              <label>Group</label>
-              <select
-                className="custom-select"
-                value={groupId}
-                onChange={(e) => setGroupId(e.target.value)}
-                required
-              >
-                <option value="" disabled>
-                  Select Group
-                </option>
-                {groups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Category Selection */}
-            <div className="input-group" style={{ flex: 1 }}>
-              <label>Category</label>
-              <select value={category} onChange={(e) => setCategory(e.target.value)}>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Split Type */}
-          <div className="input-group">
-            <label>Split Type</label>
-            <select
-              className="custom-select"
-              value={splitType}
-              onChange={(e) => setSplitType(e.target.value)}
-            >
-              <option value="EQUAL">Equal Split</option>
-              <option value="PERCENTAGE">Percentage Split</option>
-            </select>
-            <small style={{ color: "#64748b" }}>
-              Equal splits the amount evenly among selected participants. Percentage uses
-              custom shares totaling 100%.
-            </small>
-          </div>
-
-          {/* Participants Selection */}
-          <div className="input-group">
-            <label>Split Among (Select Members)</label>
-
-            {members.length === 0 ? (
-              <div className="info-box">
-                <small>No members found for this group.</small>
+              <div className="input-group">
+                <label>Title</label>
+                <input
+                  placeholder="e.g. Pizza Night"
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
+                  required
+                />
               </div>
-            ) : (
-              <div
-                style={{
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "10px",
-                  padding: "10px",
-                  maxHeight: "220px",
-                  overflowY: "auto",
-                }}
-              >
-                {members.map((m) => {
-                  const mid = m.user.id;
-                  const displayName =
-                    m.user.name ||
-                    m.user.username ||
-                    m.user.email ||
-                    `User ${mid}`;
 
-                  const checked = selectedMemberIds.includes(mid);
+              <div className="row">
+                <div className="input-group">
+                  <label>Total Amount ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    required
+                  />
+                </div>
 
-                  return (
-                    <div
-                      key={mid}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "8px 6px",
-                        borderBottom: "1px solid #f1f5f9",
-                        gap: "10px",
-                      }}
-                    >
-                      <label style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleMember(mid)}
-                        />
-                        <span>{displayName}</span>
-                      </label>
+                <div className="input-group">
+                  <label>Date</label>
+                  <input
+                    type="date"
+                    value={expenseDate}
+                    onChange={(e) => setExpenseDate(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
 
-                      {/* Percentage input only in percentage mode AND if selected */}
-                      {splitType === "PERCENTAGE" && checked && (
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={percentages[mid] ?? ""}
-                            onChange={(e) => handlePercentageChange(mid, e.target.value)}
-                            style={{
-                              width: "90px",
-                              padding: "6px 8px",
-                              borderRadius: "8px",
-                              border: "1px solid #e2e8f0",
-                            }}
-                          />
-                          <span>%</span>
+            <div className="form-section">
+              <div className="form-section-title">👥 Group & Category</div>
+
+              <div className="row">
+                <div className="input-group">
+                  <label>Group</label>
+                  <select
+                    className="custom-select"
+                    value={groupId}
+                    onChange={(e) => setGroupId(e.target.value)}
+                    required
+                  >
+                    <option value="" disabled>
+                      Select Group
+                    </option>
+                    {groups.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="input-group">
+                  <label>Category</label>
+                  <select
+                    className="custom-select"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="form-section">
+              <div className="form-section-title">⚖️ Split Settings</div>
+
+              <div className="input-group">
+                <label>Split Type</label>
+                <select
+                  className="custom-select"
+                  value={splitType}
+                  onChange={(e) => setSplitType(e.target.value)}
+                >
+                  <option value="EQUAL">Equal Split</option>
+                  <option value="PERCENTAGE">Percentage Split</option>
+                </select>
+                <small className="helper-text">
+                  Equal split divides the amount evenly. Percentage split lets you define
+                  custom shares totaling 100%.
+                </small>
+              </div>
+
+              <div className="input-group">
+                <label>Split Among (Select Members)</label>
+
+                {members.length === 0 ? (
+                  <div className="info-box">
+                    <small>No members found for this group.</small>
+                  </div>
+                ) : (
+                  <div className="member-list">
+                    {members.map((m) => {
+                      const mid = m.user.id;
+                      const displayName =
+                        m.user.name ||
+                        m.user.username ||
+                        m.user.email ||
+                        `User ${mid}`;
+
+                      const checked = selectedMemberIds.includes(mid);
+
+                      return (
+                        <div key={mid} className="member-card">
+                          <label className="member-left">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleMember(mid)}
+                            />
+                            <span className="member-name">{displayName}</span>
+                          </label>
+
+                          {splitType === "PERCENTAGE" && checked && (
+                            <div className="member-percent-box">
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={percentages[mid] ?? ""}
+                                onChange={(e) => handlePercentageChange(mid, e.target.value)}
+                                className="percentage-input"
+                              />
+                              <span className="member-chip">%</span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            )}
 
-            {splitType === "PERCENTAGE" && (
-              <div className="info-box" style={{ marginTop: "10px" }}>
+              <div className="info-box split-preview">
                 <small>
-                  Percentage total: <b>{percentageSum.toFixed(2)}%</b> (must be 100%)
+                  <b>{selectedMemberIds.length}</b> participant
+                  {selectedMemberIds.length === 1 ? "" : "s"} selected
+                  {splitType === "EQUAL" && selectedMemberIds.length > 0 && Number(amount || 0) > 0
+                    ? ` • $${perHeadAmount.toFixed(2)} each`
+                    : ""}
+                  {splitType === "PERCENTAGE"
+                    ? ` • Percentage total: ${percentageSum.toFixed(2)}%`
+                    : ""}
                 </small>
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* ✅ Receipt Upload */}
-          <div className="input-group">
-            <label>Attach Receipt (Optional)</label>
-            <input
-              type="file"
-              accept="image/*,application/pdf"
-              onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
-            />
-            <small style={{ color: "#64748b" }}>
-              Upload an image or PDF. This will be linked to the expense after it is created.
-            </small>
+            <div className="form-section">
+              <div className="form-section-title">🧾 Receipt & Notes</div>
 
-            {receiptFile && (
-              <div className="info-box" style={{ marginTop: "10px" }}>
-                <small>
-                  Selected: <b>{receiptFile.name}</b> ({Math.round(receiptFile.size / 1024)} KB)
-                </small>
+              <div className="input-group">
+                <label>Attach Receipt (Optional)</label>
+                <div className="file-box">
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                  />
+                  <small className="helper-text">
+                    Upload an image or PDF. It will be linked after the expense is created.
+                  </small>
+                </div>
+
+                {receiptFile && (
+                  <div className="info-box">
+                    <small>
+                      Selected: <b>{receiptFile.name}</b> (
+                      {Math.round(receiptFile.size / 1024)} KB)
+                    </small>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Notes */}
-          <div className="input-group">
-            <label>Notes (Optional)</label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add more details about this expense..."
-              style={{
-                width: "100%",
-                borderRadius: "8px",
-                padding: "10px",
-                border: "1px solid #e2e8f0",
-                minHeight: "80px",
-                fontFamily: "inherit",
-              }}
-            />
-          </div>
+              <div className="input-group">
+                <label>Notes (Optional)</label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add more details about this expense..."
+                />
+              </div>
+            </div>
 
-          <div className="info-box">
-            <small>
-              FairShare will calculate and store splits based on your selected members and split
-              type.
-            </small>
-          </div>
+            <div className="info-box">
+              <small>
+                FairShare will calculate and store splits based on your selected members
+                and split type.
+              </small>
+            </div>
 
-          <button type="submit" className="auth-button" disabled={loading || groups.length === 0}>
-            {loading ? "Calculating Splits..." : "Add Expense"}
-          </button>
+            <button
+              type="submit"
+              className="auth-button"
+              disabled={loading || groups.length === 0}
+            >
+              {loading ? "Calculating Splits..." : "Add Expense"}
+            </button>
 
-          <button
-            type="button"
-            className="secondary-btn"
-            style={{
-              width: "100%",
-              marginTop: "10px",
-              background: "white",
-              color: "#64748b",
-              border: "1px solid #e2e8f0",
-            }}
-            onClick={() => navigate("/dashboard")}
-          >
-            Cancel
-          </button>
-        </form>
+            <button
+              type="button"
+              className="secondary-btn cancel-btn"
+              onClick={() => navigate("/dashboard")}
+            >
+              Cancel
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

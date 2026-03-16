@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExpenseSplit.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">FairShare Backend</a> &gt; <a href="index.source.html" class="el_package">com.fairshare.model</a> &gt; <span class="el_source">ExpenseSplit.java</span></div><h1>ExpenseSplit.java</h1><pre class="source lang-java linenums">package com.fairshare.model;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = &quot;expense_splits&quot;)
+<span class="fc" id="L7">public class ExpenseSplit {</span>
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;expense_id&quot;)
+    private Expense expense;
+
+    // ID of the user this split belongs to
+    @Column(name = &quot;user_id&quot;)
+    private Long userId;
+
+    // Final calculated amount this user owes for this expense
+    private Double amount;
+
+    // Sprint 2: Percentage used for PERCENTAGE split type (null for EQUAL)
+    private Double percentage;
+
+    // -------- Getters --------
+<span class="nc" id="L28">    public Long getId() { return id; }</span>
+<span class="nc" id="L29">    public Expense getExpense() { return expense; }</span>
+<span class="fc" id="L30">    public Long getUserId() { return userId; }</span>
+<span class="fc" id="L31">    public Double getAmount() { return amount; }</span>
+<span class="fc" id="L32">    public Double getPercentage() { return percentage; }</span>
+
+    // -------- Setters --------
+<span class="nc" id="L35">    public void setId(Long id) { this.id = id; }</span>
+<span class="fc" id="L36">    public void setExpense(Expense expense) { this.expense = expense; }</span>
+<span class="fc" id="L37">    public void setUserId(Long userId) { this.userId = userId; }</span>
+<span class="fc" id="L38">    public void setAmount(Double amount) { this.amount = amount; }</span>
+<span class="fc" id="L39">    public void setPercentage(Double percentage) { this.percentage = percentage; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
