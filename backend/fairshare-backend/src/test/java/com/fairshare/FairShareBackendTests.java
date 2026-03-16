@@ -676,8 +676,5 @@ public class FairShareBackendTests {
     }
  }
 
-<<<<<<< Updated upstream
 
-=======
->>>>>>> Stashed changes
 
