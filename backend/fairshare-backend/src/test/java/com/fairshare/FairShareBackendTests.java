@@ -20,6 +20,7 @@ import com.fairshare.service.BalanceService;
 import com.fairshare.service.ExpenseService;
 import com.fairshare.service.GroupService;
 import org.junit.jupiter.api.Test;
+
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -34,6 +35,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+
+// import org.springframework.boot.test.context.SpringBootTest;
+import static org.junit.jupiter.api.Assertions.*;
+
+// @SpringBootTest
+
 public class FairShareBackendTests {
 
     @Mock
@@ -131,6 +138,7 @@ public class FairShareBackendTests {
         g.setInviteCode(inviteCode);
         return g;
     }
+
 
     private GroupMember makeGroupMember(Group group, User user, String role) {
         GroupMember gm = new GroupMember();
@@ -671,3 +679,13 @@ public class FairShareBackendTests {
         assertEquals(-30.0, balances.get(3L), 0.001);
     }
  }
+
+// @Test
+// void testIntentionalFailureForProfessor() {
+    // This will fail the build intentionally
+   //  int expectedMembers = 3;
+    // int actualMembers = 5;
+    // assertEquals(expectedMembers, actualMembers, "This test failed intentionally to demonstrate build failure");
+// }
+}
+
