@@ -30,7 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDate;
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -680,12 +680,5 @@ public class FairShareBackendTests {
     }
  }
 
-// @Test
-// void testIntentionalFailureForProfessor() {
-    // This will fail the build intentionally
-   //  int expectedMembers = 3;
-    // int actualMembers = 5;
-    // assertEquals(expectedMembers, actualMembers, "This test failed intentionally to demonstrate build failure");
-// }
-}
+
 
