@@ -36,10 +36,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 
-// import org.springframework.boot.test.context.SpringBootTest;
-import static org.junit.jupiter.api.Assertions.*;
-
-// @SpringBootTest
 
 public class FairShareBackendTests {
 
