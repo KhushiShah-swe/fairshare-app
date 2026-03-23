@@ -126,7 +126,6 @@ A feature was considered complete only when it satisfied the following criteria:
 - ✔ Changes committed and pushed to repository  
 - ✔ Feature demonstrated in sprint review  
 
-This ensured consistency, quality, and reliability across all implemented features.
 ---
 
 ## 📫 Contact
